@@ -1,0 +1,19 @@
+###################
+### 首页接口 ###
+###################
+
+# 首页
+index/index:
+  needAuth: yes
+  withPlatform: no
+  method: get
+  handler: index.index
+  params: []
+
+# 全局配置
+index/config:
+  needAuth: yes
+  withPlatform: no
+  method: get
+  handler: index.config
+  params: []

@@ -1,0 +1,30 @@
+###################
+### 认证相关接口 ###
+###################
+
+list:
+  - route: auth/login
+    need_auth: false
+    with_platform: true
+    method: post
+    handler: auth.login
+    params:
+      - field: username
+        label: 用户名
+        rules: [must, '^[a-zA-Z0-9]{0,16}$']
+        default: ''
+      - field: password
+        label: 密码
+        rules: [must, '^[a-zA-Z0-9]{0,16}$']
+        default: ''
+      - field: files
+        label: 文件S
+        rules: [file]
+        default: ''
+
+  - route: auth/logout
+    need_auth: true
+    with_platform: true
+    method: get
+    handler: auth.logout
+    params: []

@@ -1,0 +1,13 @@
+###################
+### 项目配置 ###
+###################
+# 站点名字
+name: qpgame
+# 站点地址
+url_address: http://www.qpgame.com
+# 是否为开发模式
+is_developer: true
+# 是否为后端服务
+is_backend_service: true
+# 是否为前端服务
+is_frontend_service: false

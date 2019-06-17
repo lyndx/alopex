@@ -1,0 +1,230 @@
+package app
+
+import (
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
+)
+
+type (
+	Float  float64
+	String string
+	Int    int64
+	Bool   bool
+	T      reflect.Value
+)
+
+// 首字母大写
+func (s String) UFrist() string {
+	str := string(s)
+	if str == "" {
+		return str
+	}
+	str = strings.ToLower(str)
+	str = strings.ToUpper(string([]rune(str)[0])) + str[1:]
+	return str
+}
+
+// 字符串转整数
+func (s String) ToInt() Int {
+	str := string(s)
+	if match, _ := regexp.MatchString(`^[0-9]+$`, str); match {
+		i, _ := strconv.Atoi(str)
+		return Int(i)
+	}
+	return Int(0)
+}
+
+// 字符串转浮点数
+func (s String) ToFloat() Float {
+	str := string(s)
+	if match, _ := regexp.MatchString(`^[0-9]+(\.[0-9]+)$`, str); match {
+		f, _ := strconv.ParseFloat(str, 64)
+		return Float(f)
+	}
+	return Float(0)
+}
+
+// 字符串转布尔值
+func (s String) ToBool() Bool {
+	str := string(s)
+	if match, _ := regexp.MatchString(`^(true|false)$`, strings.ToLower(str)); match {
+		b, _ := strconv.ParseBool(str)
+		return Bool(b)
+	}
+	return Bool(false)
+}
+
+// 目录/文件扫描
+func (s String) Scan(suffix string, isDir bool) []string {
+	files := make([]string, 0)
+	err := filepath.Walk(s.ToString(), func(path string, f os.FileInfo, e error) error {
+		if e != nil {
+			return e
+		}
+		filename := f.Name()
+		// 文件清单 / 目录清单
+		if (filepath.Base(s.ToString()) != filename) && (!strings.HasPrefix(filename, ".")) && ((isDir && f.IsDir()) || ((!isDir) && (!f.IsDir()))) {
+			if (suffix != "") && (!strings.HasSuffix(filename, suffix)) {
+				return errors.New("文件后缀错误")
+			}
+			files = append(files, filename)
+		}
+		return nil
+	})
+	if err != nil {
+		return make([]string, 0)
+	}
+	return files
+}
+
+// 整数转字符串
+func (i Int) ToString() string {
+	return strconv.Itoa(int(i))
+}
+
+// 浮点数转字符串
+func (f Float) ToString(prec int) string {
+	return strconv.FormatFloat(float64(f), 'f', prec, 64)
+}
+
+// 布尔值转字符串
+func (b Bool) ToString() string {
+	return strconv.FormatBool(bool(b))
+}
+
+// 字符串转换
+func (s String) ToString() string {
+	return string(s)
+}
+
+// 任何类型转字符串
+func (t T) ToString() string {
+	v := reflect.Value(t)
+	if !v.IsValid() {
+		return ""
+	}
+	vv := reflect.ValueOf(T(v).MapParse()).Interface()
+	switch vv.(type) {
+	case string:
+		return vv.(string)
+	case int:
+		return Int(vv.(int)).ToString()
+	case byte:
+		return Int(int64(vv.(byte))).ToString()
+	case int8:
+		return Int(int64(vv.(int8))).ToString()
+	case int32:
+		return Int(int64(vv.(int32))).ToString()
+	case int64:
+		return Int(vv.(int64)).ToString()
+	case float32:
+		return Float(float64(vv.(float32))).ToString(2)
+	case float64:
+		return Float(vv.(float64)).ToString(2)
+	case bool:
+		return Bool(vv.(bool)).ToString()
+	case []interface{}, map[string]interface{}, map[interface{}]interface{}:
+		bs, _ := json.Marshal(vv)
+		return string(bs)
+	}
+	return ""
+}
+
+// 对象/数组再解析，便于转成JSON字符串
+func (t T) MapParse() interface{} {
+	v := reflect.Value(t)
+	if !v.IsValid() {
+		return nil
+	}
+	tt := v.Type().String()
+	if tt == "interface {}" {
+		v = v.Elem()
+		tt = v.Type().String()
+	}
+	if strings.HasPrefix(tt, "[]") {
+		result := make([]interface{}, 0)
+		for i := 0; i < v.Len(); i++ {
+			vv := T(v.Index(i)).MapParse()
+			result = append(result, vv)
+		}
+		return result
+	} else if strings.HasPrefix(tt, "map[") {
+		result := make(map[string]interface{})
+		for _, k := range v.MapKeys() {
+			key := T(k).ToString()
+			if key != "" {
+				kv := v.MapIndex(k)
+				result[key] = T(kv).MapParse()
+			}
+		}
+		return result
+	}
+	return v.Interface()
+}
+
+// 根据KEY获取数据，针对数组和对象
+func (t T) GetValue(key string, isStrict bool) T {
+	v := reflect.ValueOf(t.MapParse())
+	match, _ := regexp.MatchString(`^[0-9a-zA-Z_\/]+(\.[0-9a-zA-Z_\/]+)*$`, key)
+	if (!v.IsValid()) || (!match) {
+		return T(reflect.ValueOf(nil))
+	}
+	tt := v.Type().String()
+	if tt == "interface {}" {
+		v = v.Elem()
+		tt = v.Type().String()
+	}
+	isMap, isArr := strings.HasPrefix(tt, "map["), strings.HasPrefix(tt, "[]")
+	if !(isMap || isArr) {
+		return T(reflect.ValueOf(nil))
+	}
+	keys := strings.Split(key, ".")
+	nk, kv := -1, reflect.ValueOf(keys[0])
+	if match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)$`, keys[0]); match {
+		nk, _ = strconv.Atoi(keys[0])
+	}
+	if isMap {
+		vv := v.MapIndex(kv)
+		if (!vv.IsValid()) && (!isStrict) {
+			tmp := make(map[string]interface{})
+			for _, mk := range v.MapKeys() {
+				if mk.Type().String() == "string" {
+					mks := mk.String()
+					if strings.HasPrefix(mks, keys[0]+".") {
+						mks = mks[len(keys[0]+"."):]
+						tmp[mks] = v.MapIndex(mk).Interface()
+					}
+				}
+			}
+			if len(tmp) > 0 {
+				vv = reflect.ValueOf(tmp)
+			}
+		}
+		if (!vv.IsValid()) && (nk > -1) {
+			vv = v.MapIndex(reflect.ValueOf(nk))
+		}
+		if vv.IsValid() {
+			if len(keys) > 1 {
+				key = strings.Join(keys[1:], ".")
+				return T(vv).GetValue(key, isStrict)
+			}
+			return T(vv)
+		}
+	} else if nk > -1 {
+		vv := v.Index(nk)
+		if vv.IsValid() {
+			if len(keys) > 1 {
+				key = strings.Join(keys[1:], ".")
+				return T(vv).GetValue(key, isStrict)
+			}
+			return T(vv)
+		}
+	}
+	return T(reflect.ValueOf(nil))
+}
