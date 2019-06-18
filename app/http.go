@@ -2,32 +2,34 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
 
 type Http struct {
-	STime  int64
+	STime  time.Time
 	Rep    http.ResponseWriter
 	Req    *http.Request
 	Params *map[string]interface{}
-	Errors []string
 }
 
-type HttpError struct {
-	Code    string                 `json:"code"`
-	Msg     string                 `json:"msg"`
-	MsgMore string                 `json:"msg_more"`
-	Data    map[string]interface{} `json:"data"`
+// 创建Http实例
+func NT(rep http.ResponseWriter, req *http.Request) *Http {
+	h := new(Http)
+	h.Rep = rep
+	h.Req = req
+	h.STime = time.Now()
+	h.Params = h.params()
+	return h
 }
 
 // 获取参数清单
-func (h *Http) GetParams() *Http {
+func (h *Http) params() *map[string]interface{} {
 	// 参数清单
 	params := make(map[string]interface{})
 	// Post表单
@@ -77,13 +79,12 @@ func (h *Http) GetParams() *Http {
 			params["_"+k] = v[0]
 		}
 	}
-	h.Params = &params
-	return h
+	return &params
 }
 
 // 字段校验
 func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool, string) {
-	Field, IsTrue, MSG := T(reflect.ValueOf(field)), T(reflect.ValueOf(true)), T(reflect.ValueOf(""))
+	Field, IsTrue, MSG := TT(field), TT(true), TT("")
 	IsValid := Field.IsValid()
 	for _, rule := range rules {
 		switch rule {
@@ -100,15 +101,15 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 			IsTrue.SwitchValue(IsValid, Field.IsString(), true)
 			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为字符串格式")
 		case "int":
-			Field = T(reflect.ValueOf(Field.ToString()))
+			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsInt(), true)
 			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为整数")
 		case "float":
-			Field = T(reflect.ValueOf(Field.ToString()))
+			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsFloat(), true)
 			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为浮点数")
 		case "bool":
-			Field = T(reflect.ValueOf(Field.ToString()))
+			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsBool(), true)
 			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为布尔值")
 		case "array":
@@ -120,7 +121,7 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 				if Field.IsString() {
 					match, _ = regexp.MatchString(rule, Field.ToString())
 				}
-				IsTrue = T(reflect.ValueOf(match))
+				IsTrue = TT(match)
 			}
 			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "正则不匹配")
 		}
@@ -165,21 +166,44 @@ func (h *Http) Verify(configs []map[string]interface{}) {
 	}
 	(*h.Params)["__"] = result
 	if !isTrue {
-		h.Output(HttpError{"402", "请求失败", strings.Join(messages, "；"), nil})
+		h.Output(402, "请求失败", strings.Join(messages, "；"))
 	}
 }
 
 // 请求返回
-func (h *Http) Output(err HttpError) {
-	time.Sleep(1)
+func (h *Http) Output(code int, args ...interface{}) {
 	if h.Rep == nil {
-		panic(map[string]interface{}{"sdfsd": 23423})
+		panic("EOF")
 	}
-	bs, _ := json.Marshal(err)
-	tmp := make(map[string]interface{})
-	json.Unmarshal(bs, &tmp)
-	tmp["duration"] = strconv.Itoa(int(float64(time.Now().UnixNano())-float64(h.STime))) + "毫秒"
-	bs, _ = json.Marshal(tmp)
+	result := make(map[String]interface{})
+	result["code"] = code
+	if code == 200 {
+		if len(args) > 0 {
+			result["data"] = args[0]
+			if len(args) > 1 {
+				t := TT(args[1])
+				if t.IsString() && (!t.IsEmpty()) {
+					result["message"] = args[1]
+				}
+			}
+		}
+	} else if code == 503 {
+		if len(args) > 0 {
+			result["message"] = args[0].(string) + "\n" + strings.Join(args[1].([]string), "\n")
+		}
+	} else {
+		if len(args) > 0 {
+			t := TT(args[0])
+			if t.IsString() && (!t.IsEmpty()) {
+				result["message"] = args[0]
+			}
+		}
+	}
+	result["duration"] = fmt.Sprintf("%s", time.Since(h.STime))
+	if t, _ := String("").C("app.debug"); t.IsValid() && t.IsBool() && (t.ToString() == "true") {
+		result["params"] = h.Params
+	}
+	bs, _ := json.Marshal(result)
 	h.Rep.Write(bs)
 	h.Rep = nil
 }

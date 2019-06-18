@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -25,7 +24,7 @@ func (s String) R(key string) (T, error) {
 		for _, dir := range String("route").Scan("", true) {
 			result[dir] = make(map[string][]interface{})
 			v.AddConfigPath("route/" + dir)
-			for _, file := range String("route/"+dir).Scan(".yml", false) {
+			for _, file := range String("route/" + dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
 				v.SetConfigName(rname)
 				if err := v.ReadInConfig(); err != nil {
@@ -41,12 +40,12 @@ func (s String) R(key string) (T, error) {
 				}
 			}
 		}
-		tmp := T(reflect.ValueOf(T(reflect.ValueOf(result)).MapParse()))
+		tmp := TT(TT(result).MapParse())
 		route = &tmp
 	})
 	path := s.ToString()
 	if path == "" {
-		return T(reflect.ValueOf(nil)), errors.New("参数错误")
+		return TT(nil), errors.New("参数错误")
 	}
 	if key != "" {
 		key = path + "." + key

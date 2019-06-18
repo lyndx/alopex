@@ -36,12 +36,12 @@ func (s String) C(key string) (T, error) {
 			}
 			result[cname] = items
 		}
-		tmp := T(reflect.ValueOf(T(reflect.ValueOf(result)).MapParse()))
+		tmp := TT(TT(result).MapParse())
 		config = &tmp
 	})
 	path := s.ToString()
 	if path == "" {
-		return T(reflect.ValueOf(nil)), errors.New("参数错误")
+		return TT(nil), errors.New("参数错误")
 	}
 	if key != "" {
 		key = path + "." + key

@@ -3,21 +3,83 @@ package app
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type (
-	Float  float64
+	Float float64
 	String string
-	Int    int64
-	Bool   bool
-	T      reflect.Value
+	Int int64
+	Bool bool
+	T reflect.Value
 )
+
+// 异常消息
+func PHandler() {
+	if err := recover(); err != nil {
+		_, filename, _, _ := runtime.Caller(0)
+		RPath, PID, TIME := path.Dir(path.Dir(filename)), strconv.Itoa(os.Getpid()), time.Now().Format("2006/01/02 15:04:05")
+		EMsg := strings.TrimLeft(fmt.Sprintf("%v", err), "runtime error: ")
+		if EMsg == "EOF" {
+			return
+		}
+		title, stack := "["+TIME+"][PID:"+PID+"] ( "+EMsg+" )", make([]string, 0)
+		tmp := strings.Split(string(debug.Stack()), "\n")
+		if len(tmp) > 0 {
+			for k, v := range tmp {
+				if (k%2 == 0) || (k == 1) || (v == "") || (v == "alopex/app.PHandler()") {
+					continue
+				}
+				rec, _ := regexp.Compile(`\(0x[a-z0-9]+`)
+				v = rec.ReplaceAllString(v, "(?")
+				rec, _ = regexp.Compile(` ?0x[a-z0-9]+\)`)
+				v = rec.ReplaceAllString(v, "?)")
+				rec, _ = regexp.Compile(`, 0x[a-z0-9]+,`)
+				v = rec.ReplaceAllString(v, ",?,")
+				rec, _ = regexp.Compile(`, 0x[a-z0-9]+,`)
+				v = rec.ReplaceAllString(v, ",?,")
+				path := strings.TrimLeft(strings.Split(tmp[k+1], " +0x")[0], "\t")
+				if strings.HasPrefix(path, RPath) {
+					stack = append(stack, v+"  "+path)
+				}
+			}
+		}
+		fmt.Println("\n" + title)
+		if len(stack) > 0 {
+			fmt.Println("----------------------------------------------")
+			for _, v := range stack {
+				fmt.Println("》 " + v)
+			}
+			fmt.Println()
+		}
+	}
+}
+
+// 实例化T对象
+func TT(t interface{}) T {
+	tmp := reflect.ValueOf(t)
+	if !tmp.IsValid() {
+		return T(reflect.ValueOf(nil))
+	}
+	tp := tmp.Type().String()
+	if tp == "reflect.Value" {
+		return T(t.(reflect.Value))
+	}
+	if tp == "app.T" {
+		return t.(T)
+	}
+	return T(reflect.ValueOf(t))
+}
 
 // 首字母大写
 func (s String) UFrist() string {
@@ -113,7 +175,7 @@ func (t T) ToString() string {
 	if !t.IsValid() {
 		return ""
 	}
-	vv := reflect.ValueOf(T(reflect.Value(t)).MapParse()).Interface()
+	vv := reflect.ValueOf(TT(t).MapParse()).Interface()
 	switch vv.(type) {
 	case string:
 		return vv.(string)
@@ -177,7 +239,7 @@ func (t T) GetValue(key string, isStrict bool) T {
 	v := reflect.ValueOf(t.MapParse())
 	match, _ := regexp.MatchString(`^[0-9a-zA-Z_\/]+(\.[0-9a-zA-Z_\/]+)*$`, key)
 	if (!v.IsValid()) || (!match) {
-		return T(reflect.ValueOf(nil))
+		return TT(nil)
 	}
 	tt := v.Type().String()
 	if tt == "interface {}" {
@@ -186,7 +248,7 @@ func (t T) GetValue(key string, isStrict bool) T {
 	}
 	isMap, isArr := strings.HasPrefix(tt, "map["), strings.HasPrefix(tt, "[]")
 	if !(isMap || isArr) {
-		return T(reflect.ValueOf(nil))
+		return TT(nil)
 	}
 	keys := strings.Split(key, ".")
 	nk, kv := -1, reflect.ValueOf(keys[0])
@@ -230,7 +292,7 @@ func (t T) GetValue(key string, isStrict bool) T {
 			return T(vv)
 		}
 	}
-	return T(reflect.ValueOf(nil))
+	return TT(nil)
 }
 
 // 返回真实数值
@@ -244,9 +306,9 @@ func (t T) Value() interface{} {
 // 根据条件取对应值
 func (t *T) SwitchValue(conditions bool, trueValue interface{}, falseValue interface{}) interface{} {
 	if conditions {
-		*t = T(reflect.ValueOf(trueValue))
+		*t = TT(trueValue)
 	} else {
-		*t = T(reflect.ValueOf(falseValue))
+		*t = TT(falseValue)
 	}
 	return *t
 }

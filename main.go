@@ -10,19 +10,16 @@ import (
 )
 
 func main() {
+	defer app.PHandler()
 	http.HandleFunc("/sdfsd", func(rep http.ResponseWriter, req *http.Request) {
-		defer func() {
-			if e := recover(); e != nil {
-				fmt.Println("[BUG] ", e)
-			}
-		}()
+		defer app.PHandler()
+		h := app.NT(rep, req)
 
-		h := app.Http{time.Now().UnixNano(), rep, req, nil, nil}
-		h.GetParams().Verify(nil)
+		h.Verify(nil)
 
-		h.Output(app.HttpError{"402", "请求失败", "", *(h.Params)})
-		h.Output(app.HttpError{"402", "sdfsd", "", *(h.Params)})
-		h.Output(app.HttpError{"402", "位34通过", "", *(h.Params)})
+		h.Output(402, "请求失败")
+		h.Output(402)
+		h.Output(200, *(h.Params), "草组成")
 
 		fmt.Println(time.Now().Unix())
 	})
