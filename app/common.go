@@ -103,13 +103,17 @@ func (s String) ToString() string {
 	return string(s)
 }
 
+// 校验是否为有效参数
+func (t T) IsValid() bool {
+	return reflect.Value(t).IsValid()
+}
+
 // 任何类型转字符串
 func (t T) ToString() string {
-	v := reflect.Value(t)
-	if !v.IsValid() {
+	if !t.IsValid() {
 		return ""
 	}
-	vv := reflect.ValueOf(T(v).MapParse()).Interface()
+	vv := reflect.ValueOf(T(reflect.Value(t)).MapParse()).Interface()
 	switch vv.(type) {
 	case string:
 		return vv.(string)
@@ -138,10 +142,10 @@ func (t T) ToString() string {
 
 // 对象/数组再解析，便于转成JSON字符串
 func (t T) MapParse() interface{} {
-	v := reflect.Value(t)
-	if !v.IsValid() {
+	if !t.IsValid() {
 		return nil
 	}
+	v := reflect.Value(t)
 	tt := v.Type().String()
 	if tt == "interface {}" {
 		v = v.Elem()
@@ -227,4 +231,109 @@ func (t T) GetValue(key string, isStrict bool) T {
 		}
 	}
 	return T(reflect.ValueOf(nil))
+}
+
+// 返回真实数值
+func (t T) Value() interface{} {
+	if !t.IsValid() {
+		return nil
+	}
+	return reflect.Value(t).Interface()
+}
+
+// 根据条件取对应值
+func (t *T) SwitchValue(conditions bool, trueValue interface{}, falseValue interface{}) interface{} {
+	if conditions {
+		*t = T(reflect.ValueOf(trueValue))
+	} else {
+		*t = T(reflect.ValueOf(falseValue))
+	}
+	return *t
+}
+
+// 判断是否为文件
+func (t T) IsFile(checkIsFileArray bool) bool {
+	if !t.IsValid() {
+		return false
+	}
+	if checkIsFileArray {
+		return reflect.Value(t).Type().String() == "[]*multipart.FileHeader"
+	}
+	return reflect.Value(t).Type().String() == "*multipart.FileHeader"
+}
+
+// 判断是否为字符串
+func (t T) IsString() bool {
+	if !t.IsValid() {
+		return false
+	}
+	return reflect.Value(t).Type().String() == "string"
+}
+
+// 判断是否为整数
+func (t T) IsInt() bool {
+	if !t.IsValid() {
+		return false
+	}
+	tp := reflect.Value(t).Type().String()
+	if strings.HasPrefix(tp, "int") && (tp != "interface {}") {
+		return true
+	} else if t.IsString() {
+		match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)$`, t.ToString())
+		return match
+	}
+	return false
+}
+
+// 判断是否为浮点数
+func (t T) IsFloat() bool {
+	if !t.IsValid() {
+		return false
+	}
+	tp := reflect.Value(t).Type().String()
+	if strings.HasPrefix(tp, "float") {
+		return true
+	} else if t.IsString() {
+		match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`, t.ToString())
+		return match
+	}
+	return false
+}
+
+// 判断是否为布尔值
+func (t T) IsBool() bool {
+	if !t.IsValid() {
+		return false
+	}
+	tp := reflect.Value(t).Type().String()
+	if strings.HasPrefix(tp, "bool") {
+		return true
+	} else if t.IsString() {
+		match, _ := regexp.MatchString(`^(TRUE|FALSE|YES|NO)$`, strings.ToUpper(t.ToString()))
+		return match
+	}
+	return false
+}
+
+// 判断是否为数组
+func (t T) IsArray() bool {
+	if !t.IsValid() {
+		return false
+	}
+	tp := reflect.Value(t).Type().String()
+	if strings.HasPrefix(tp, "[]") {
+		return true
+	}
+	return false
+}
+
+// 判断是否为空
+func (t T) IsEmpty() bool {
+	if !t.IsValid() {
+		return true
+	}
+	if t.IsString() && (t.ToString() == "") {
+		return true
+	}
+	return false
 }
