@@ -20,6 +20,14 @@ type Http struct {
 
 // 创建Http实例
 func NT(rep http.ResponseWriter, req *http.Request) *Http {
+	// 跨域处理
+	if origin := req.Header.Get("Origin"); origin != "" {
+		fmt.Println(origin)
+		req.Header.Set("Access-Control-Allow-Origin", "*")
+		req.Header.Set("Access-Control-Allow-Methods", "POST,GET,DELETE")
+		req.Header.Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Version")
+	}
+	// 新建构造
 	h := new(Http)
 	h.Rep = rep
 	h.Req = req
@@ -74,9 +82,9 @@ func (h *Http) params() *map[string]interface{} {
 	// 头部数据
 	for k, v := range h.Req.Header {
 		k = strings.ToLower(k)
-		params["_"+k] = v
+		params[k] = v
 		if len(v) == 1 {
-			params["_"+k] = v[0]
+			params[k] = v[0]
 		}
 	}
 	return &params
@@ -90,31 +98,31 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 		switch rule {
 		case "file":
 			IsTrue.SwitchValue(IsValid, Field.IsFile(false), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为文件")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为文件")
 		case "files":
 			IsTrue.SwitchValue(IsValid, Field.IsFile(true), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为文件数组")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为文件数组")
 		case "must":
-			IsTrue.SwitchValue(IsValid, Field.IsEmpty(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "为必填字段")
+			IsTrue.SwitchValue(IsValid, !Field.IsEmpty(), true)
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "为必填字段")
 		case "string":
 			IsTrue.SwitchValue(IsValid, Field.IsString(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为字符串格式")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为字符串格式")
 		case "int":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsInt(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为整数")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为整数")
 		case "float":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsFloat(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为浮点数")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为浮点数")
 		case "bool":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsBool(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为布尔值")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为布尔值")
 		case "array":
 			IsTrue.SwitchValue(IsValid, Field.IsArray(), true)
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "必须为数组")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为数组")
 		default:
 			if IsValid {
 				match := false
@@ -123,20 +131,21 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 				}
 				IsTrue = TT(match)
 			}
-			MSG.SwitchValue(reflect.Value(IsTrue).Bool(), "", "正则不匹配")
+			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "正则不匹配")
 		}
 		if IsTrue.ToString() == "false" {
-			return nil, false, MSG.ToString()
+			return Field.Value(), false, MSG.ToString()
 		}
 	}
 	return Field.Value(), true, ""
 }
 
 // 参数校验
-func (h *Http) Verify(configs []map[string]interface{}) {
+func (h *Http) Verify(configs []interface{}) {
 	params := *(*h).Params
 	result, isTrue, messages := make(map[string]interface{}), true, make([]string, 0)
-	for _, config := range configs {
+	for _, item := range configs {
+		config := item.(map[string]interface{})
 		// 字段名称
 		field := config["field"].(string)
 		// 校验规则
@@ -160,9 +169,8 @@ func (h *Http) Verify(configs []map[string]interface{}) {
 			if _, ok := config["label"]; ok {
 				messages = append(messages, config["label"].(string)+msg)
 			}
-		} else {
-			result[field] = value
 		}
+		result[field] = value
 	}
 	(*h.Params)["__"] = result
 	if !isTrue {
@@ -177,8 +185,8 @@ func (h *Http) Output(code int, args ...interface{}) {
 	}
 	result := make(map[String]interface{})
 	result["code"] = code
-	if code == 200 {
-		if len(args) > 0 {
+	if len(args) > 0 {
+		if code == 200 {
 			result["data"] = args[0]
 			if len(args) > 1 {
 				t := TT(args[1])
@@ -186,24 +194,58 @@ func (h *Http) Output(code int, args ...interface{}) {
 					result["message"] = args[1]
 				}
 			}
-		}
-	} else if code == 503 {
-		if len(args) > 0 {
-			result["message"] = args[0].(string) + "\n" + strings.Join(args[1].([]string), "\n")
-		}
-	} else {
-		if len(args) > 0 {
+		} else {
 			t := TT(args[0])
 			if t.IsString() && (!t.IsEmpty()) {
 				result["message"] = args[0]
 			}
+			if len(args) > 1 {
+				t := TT(args[1])
+				if t.IsString() && (!t.IsEmpty()) {
+					result["message_detail"] = args[1]
+				}
+			}
 		}
 	}
-	result["duration"] = fmt.Sprintf("%s", time.Since(h.STime))
-	if t, _ := String("").C("app.debug"); t.IsValid() && t.IsBool() && (t.ToString() == "true") {
-		result["params"] = h.Params
+	result["duration"] = time.Since(h.STime).String()
+	if t, _ := String("app").C("is_developer"); t.IsValid() && t.IsBool() && t.Value().(bool) {
+		PA, PB := make(map[string]interface{}), (*h.Params)["__"]
+		for k, v := range *h.Params {
+			if k != "__" {
+				PA[k] = v
+			}
+		}
+		result["request"] = map[string]interface{}{
+			"params": PA,
+			"needed": PB,
+		}
 	}
 	bs, _ := json.Marshal(result)
+	// 可以考虑GZIP传输
+	h.Rep.WriteHeader(200)
+	h.Rep.Header().Set("token", "")
+	if token, ok := (*h.params())["token"]; ok && (token != "") {
+		h.Rep.Header().Set("token", token.(string))
+	}
 	h.Rep.Write(bs)
 	h.Rep = nil
+}
+
+// 跨域配置
+func (h *Http) Cors() {
+	origin := h.Req.Header.Get("Origin")
+	if origin != "" {
+		h.Req.Header.Set("Access-Control-Allow-Origin", "*")
+		h.Req.Header.Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
+		h.Req.Header.Set("Access-Control-Allow-Headers", "Authorization,Accept-Language,Cache-Control,Content-Type")
+		h.Req.Header.Set("Access-Control-Expose-Headers", "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type")
+		h.Req.Header.Set("Access-Control-Max-Age", "172800")
+		h.Req.Header.Set("content-type", "application/json")
+	}
+	// 放行所有OPTIONS方法
+	if h.Req.Method == "OPTIONS" {
+		h.Rep.WriteHeader(200)
+		h.Rep.Write([]byte("Options Request!"))
+		h.Rep = nil
+	}
 }

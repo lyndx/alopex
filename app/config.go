@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 
@@ -48,9 +47,9 @@ func (s String) C(key string) (T, error) {
 	} else {
 		key = path
 	}
-	result := (*config).GetValue(key, false)
-	if !reflect.Value(result).IsValid() {
-		return result, errors.New("配置项数据获取失败")
+	result := TT((*config).GetValue(key, false))
+	if !result.IsValid() {
+		return TT(nil), errors.New("配置项数据获取失败")
 	}
 	return result, nil
 }

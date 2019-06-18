@@ -3,6 +3,8 @@
 ###################
 
 list:
+
+  # 登录
   - route: auth/login
     need_auth: false
     with_platform: true
@@ -17,11 +19,8 @@ list:
         label: 密码
         rules: [must, '^[a-zA-Z0-9]{0,16}$']
         default: ''
-      - field: files
-        label: 文件S
-        rules: [file]
-        default: ''
 
+  # 退出登录
   - route: auth/logout
     need_auth: true
     with_platform: true

@@ -17,11 +17,11 @@ import (
 )
 
 type (
-	Float float64
+	Float  float64
 	String string
-	Int int64
-	Bool bool
-	T reflect.Value
+	Int    int64
+	Bool   bool
+	T      reflect.Value
 )
 
 // 异常消息
@@ -29,11 +29,11 @@ func PHandler() {
 	if err := recover(); err != nil {
 		_, filename, _, _ := runtime.Caller(0)
 		RPath, PID, TIME := path.Dir(path.Dir(filename)), strconv.Itoa(os.Getpid()), time.Now().Format("2006/01/02 15:04:05")
-		EMsg := strings.TrimLeft(fmt.Sprintf("%v", err), "runtime error: ")
+		EMsg := fmt.Sprintf("%v", err)
 		if EMsg == "EOF" {
 			return
 		}
-		title, stack := "["+TIME+"][PID:"+PID+"] ( "+EMsg+" )", make([]string, 0)
+		title, stack := "["+TIME+"][PID:"+PID+"]\n  “"+EMsg+"”", make([]string, 0)
 		tmp := strings.Split(string(debug.Stack()), "\n")
 		if len(tmp) > 0 {
 			for k, v := range tmp {
@@ -58,7 +58,7 @@ func PHandler() {
 		if len(stack) > 0 {
 			fmt.Println("----------------------------------------------")
 			for _, v := range stack {
-				fmt.Println("》 " + v)
+				fmt.Println("》> " + v)
 			}
 			fmt.Println()
 		}
@@ -73,12 +73,16 @@ func TT(t interface{}) T {
 	}
 	tp := tmp.Type().String()
 	if tp == "reflect.Value" {
-		return T(t.(reflect.Value))
+		return TT(t.(reflect.Value).Interface())
 	}
 	if tp == "app.T" {
-		return t.(T)
+		return T(reflect.ValueOf(t.(T).Value()))
 	}
-	return T(reflect.ValueOf(t))
+	if tp == "interface {}" {
+		tmp = tmp.Elem()
+		return TT(tmp)
+	}
+	return T(reflect.ValueOf(tmp))
 }
 
 // 首字母大写
@@ -244,6 +248,13 @@ func (t T) GetValue(key string, isStrict bool) T {
 	tt := v.Type().String()
 	if tt == "interface {}" {
 		v = v.Elem()
+		return TT(v).GetValue(key, isStrict)
+	}
+	if tt == "app.T" {
+		return v.Interface().(T).GetValue(key, isStrict)
+	}
+	if tt == "reflect.Value" {
+		v = v.Interface().(reflect.Value)
 		tt = v.Type().String()
 	}
 	isMap, isArr := strings.HasPrefix(tt, "map["), strings.HasPrefix(tt, "[]")
@@ -300,7 +311,18 @@ func (t T) Value() interface{} {
 	if !t.IsValid() {
 		return nil
 	}
-	return reflect.Value(t).Interface()
+	v := reflect.Value(t).Interface()
+	vv := reflect.ValueOf(v)
+	tp := vv.Type().String()
+	if tp == "reflect.Value" {
+		vv = reflect.ValueOf(v.(reflect.Value).Interface())
+		return T(vv).Value()
+	}
+	if tp == "interface {}" {
+		vv = reflect.ValueOf(vv.Elem())
+		return T(vv).Value()
+	}
+	return v
 }
 
 // 根据条件取对应值
@@ -318,6 +340,7 @@ func (t T) IsFile(checkIsFileArray bool) bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	if checkIsFileArray {
 		return reflect.Value(t).Type().String() == "[]*multipart.FileHeader"
 	}
@@ -329,6 +352,7 @@ func (t T) IsString() bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	return reflect.Value(t).Type().String() == "string"
 }
 
@@ -337,6 +361,7 @@ func (t T) IsInt() bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	tp := reflect.Value(t).Type().String()
 	if strings.HasPrefix(tp, "int") && (tp != "interface {}") {
 		return true
@@ -352,6 +377,7 @@ func (t T) IsFloat() bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	tp := reflect.Value(t).Type().String()
 	if strings.HasPrefix(tp, "float") {
 		return true
@@ -367,6 +393,7 @@ func (t T) IsBool() bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	tp := reflect.Value(t).Type().String()
 	if strings.HasPrefix(tp, "bool") {
 		return true
@@ -382,6 +409,7 @@ func (t T) IsArray() bool {
 	if !t.IsValid() {
 		return false
 	}
+	t = TT(t)
 	tp := reflect.Value(t).Type().String()
 	if strings.HasPrefix(tp, "[]") {
 		return true
@@ -394,6 +422,7 @@ func (t T) IsEmpty() bool {
 	if !t.IsValid() {
 		return true
 	}
+	t = TT(t)
 	if t.IsString() && (t.ToString() == "") {
 		return true
 	}

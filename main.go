@@ -4,26 +4,20 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"alopex/app"
 )
 
 func main() {
 	defer app.PHandler()
-	http.HandleFunc("/sdfsd", func(rep http.ResponseWriter, req *http.Request) {
-		defer app.PHandler()
-		h := app.NT(rep, req)
 
-		h.Verify(nil)
+	// 加载后端服务
+	IsBackendService, _ := app.String("app").C("is_backend_service")
+	if IsBackendService.IsValid() && IsBackendService.IsBool() && IsBackendService.Value().(bool) {
+		app.String("backend").RH()
+	}
 
-		h.Output(402, "请求失败")
-		h.Output(402)
-		h.Output(200, *(h.Params), "草组成")
-
-		fmt.Println(time.Now().Unix())
-	})
-
+	// 监听服务端口
 	err := http.ListenAndServe(":81", nil)
 	if err != nil {
 		fmt.Println("[ERROR] 服务启动异常，" + err.Error())

@@ -5,6 +5,8 @@
 name: qpgame
 # 站点地址
 url_address: http://www.qpgame.com
+# 是否跨域
+is_cors: true
 # 是否为开发模式
 is_developer: true
 # 是否为后端服务
