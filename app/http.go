@@ -2,10 +2,9 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
-	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -22,11 +21,18 @@ type Http struct {
 func NT(rep http.ResponseWriter, req *http.Request) *Http {
 	// 跨域处理
 	if origin := req.Header.Get("Origin"); origin != "" {
-		fmt.Println(origin)
 		req.Header.Set("Access-Control-Allow-Origin", "*")
-		req.Header.Set("Access-Control-Allow-Methods", "POST,GET,DELETE")
-		req.Header.Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Version")
+		req.Header.Set("Access-Control-Max-Age", "172800")
+		req.Header.Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
+		req.Header.Set("Access-Control-Allow-Headers", "Authorization,Accept-Language,Cache-Control,Content-Type")
+		req.Header.Set("Access-Control-Expose-Headers", "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type")
 	}
+	if req.Method == "OPTIONS" {
+		rep.Header().Set("content-type", "text/plain")
+		rep.Write([]byte("Options Request!"))
+		panic("EOF")
+	}
+	req.Header.Set("content-type", "application/json")
 	// 新建构造
 	h := new(Http)
 	h.Rep = rep
@@ -98,31 +104,31 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 		switch rule {
 		case "file":
 			IsTrue.SwitchValue(IsValid, Field.IsFile(false), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为文件")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为文件")
 		case "files":
 			IsTrue.SwitchValue(IsValid, Field.IsFile(true), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为文件数组")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为文件数组")
 		case "must":
 			IsTrue.SwitchValue(IsValid, !Field.IsEmpty(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "为必填字段")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "为必填字段")
 		case "string":
 			IsTrue.SwitchValue(IsValid, Field.IsString(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为字符串格式")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为字符串格式")
 		case "int":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsInt(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为整数")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为整数")
 		case "float":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsFloat(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为浮点数")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为浮点数")
 		case "bool":
 			Field = TT(Field.ToString())
 			IsTrue.SwitchValue(IsValid, Field.IsBool(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为布尔值")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为布尔值")
 		case "array":
 			IsTrue.SwitchValue(IsValid, Field.IsArray(), true)
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "必须为数组")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "必须为数组")
 		default:
 			if IsValid {
 				match := false
@@ -131,17 +137,17 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 				}
 				IsTrue = TT(match)
 			}
-			MSG.SwitchValue(TT(IsTrue).Value().(bool), "", "正则不匹配")
+			MSG.SwitchValue(TValue(IsTrue).(bool), "", "正则不匹配")
 		}
 		if IsTrue.ToString() == "false" {
-			return Field.Value(), false, MSG.ToString()
+			return TValue(Field), false, MSG.ToString()
 		}
 	}
-	return Field.Value(), true, ""
+	return TValue(Field), true, ""
 }
 
 // 参数校验
-func (h *Http) Verify(configs []interface{}) {
+func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool){
 	params := *(*h).Params
 	result, isTrue, messages := make(map[string]interface{}), true, make([]string, 0)
 	for _, item := range configs {
@@ -150,7 +156,7 @@ func (h *Http) Verify(configs []interface{}) {
 		field := config["field"].(string)
 		// 校验规则
 		rules := make([]string, 0)
-		if _, ok := config["rules"]; ok && (reflect.TypeOf(config["rules"]).String() == "[]interface {}") {
+		if _, ok := config["rules"]; ok && TT(config["rules"]).IsArray() {
 			for _, v := range config["rules"].([]interface{}) {
 				rules = append(rules, v.(string))
 			}
@@ -208,11 +214,26 @@ func (h *Http) Output(code int, args ...interface{}) {
 		}
 	}
 	result["duration"] = time.Since(h.STime).String()
-	if t, _ := String("app").C("is_developer"); t.IsValid() && t.IsBool() && t.Value().(bool) {
+	if t, _ := String("app").C("is_developer"); t.IsValid() && t.IsBool() && TValue(t).(bool) {
 		PA, PB := make(map[string]interface{}), (*h.Params)["__"]
 		for k, v := range *h.Params {
 			if k != "__" {
-				PA[k] = v
+				vv := TT(v, true)
+				if vv.IsFile(false) {
+					f := v.(*multipart.FileHeader)
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+				} else if vv.IsFile(true) {
+					fs := v.([]*multipart.FileHeader)
+					fitems := make([]map[string]interface{}, 0)
+					for _, f := range fs {
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+					}
+					PA[k] = fitems
+				} else if k == "content-type" {
+					PA[k] = String(v.(string)).Split(";")[0]
+				} else {
+					PA[k] = v
+				}
 			}
 		}
 		result["request"] = map[string]interface{}{
@@ -221,31 +242,17 @@ func (h *Http) Output(code int, args ...interface{}) {
 		}
 	}
 	bs, _ := json.Marshal(result)
-	// 可以考虑GZIP传输
 	h.Rep.WriteHeader(200)
 	h.Rep.Header().Set("token", "")
 	if token, ok := (*h.params())["token"]; ok && (token != "") {
 		h.Rep.Header().Set("token", token.(string))
 	}
+	// 可以考虑GZIP传输
 	h.Rep.Write(bs)
 	h.Rep = nil
 }
 
-// 跨域配置
-func (h *Http) Cors() {
-	origin := h.Req.Header.Get("Origin")
-	if origin != "" {
-		h.Req.Header.Set("Access-Control-Allow-Origin", "*")
-		h.Req.Header.Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
-		h.Req.Header.Set("Access-Control-Allow-Headers", "Authorization,Accept-Language,Cache-Control,Content-Type")
-		h.Req.Header.Set("Access-Control-Expose-Headers", "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type")
-		h.Req.Header.Set("Access-Control-Max-Age", "172800")
-		h.Req.Header.Set("content-type", "application/json")
-	}
-	// 放行所有OPTIONS方法
-	if h.Req.Method == "OPTIONS" {
-		h.Rep.WriteHeader(200)
-		h.Rep.Write([]byte("Options Request!"))
-		h.Rep = nil
-	}
+// 控制器
+func (h *Http) RHH(handler string) {
+
 }

@@ -17,12 +17,23 @@ import (
 )
 
 type (
-	Float  float64
+	Float float64
 	String string
-	Int    int64
-	Bool   bool
-	T      reflect.Value
+	Int int64
+	Bool bool
+	T reflect.Value
 )
+
+// 运行时相关 //////////////////////////////////////////////////////////////////
+// 打印空行
+func ELine(num int) {
+	if num < 1 {
+		num = 1
+	}
+	for i := 0; i < num; i++ {
+		fmt.Println()
+	}
+}
 
 // 异常消息
 func PHandler() {
@@ -37,7 +48,7 @@ func PHandler() {
 		tmp := strings.Split(string(debug.Stack()), "\n")
 		if len(tmp) > 0 {
 			for k, v := range tmp {
-				if (k%2 == 0) || (k == 1) || (v == "") || (v == "alopex/app.PHandler()") {
+				if (k%2 == 0) || (k == 1) || (v == "") || strings.HasSuffix(v, "/app.PHandler()") {
 					continue
 				}
 				rec, _ := regexp.Compile(`\(0x[a-z0-9]+`)
@@ -65,26 +76,13 @@ func PHandler() {
 	}
 }
 
-// 实例化T对象
-func TT(t interface{}) T {
-	tmp := reflect.ValueOf(t)
-	if !tmp.IsValid() {
-		return T(reflect.ValueOf(nil))
-	}
-	tp := tmp.Type().String()
-	if tp == "reflect.Value" {
-		return TT(t.(reflect.Value).Interface())
-	}
-	if tp == "app.T" {
-		return T(reflect.ValueOf(t.(T).Value()))
-	}
-	if tp == "interface {}" {
-		tmp = tmp.Elem()
-		return TT(tmp)
-	}
-	return T(reflect.ValueOf(tmp))
+// 终结运行
+func DIE(message string) {
+	fmt.Println("[ERROR] " + message)
+	os.Exit(1)
 }
 
+// 字符串相关 //////////////////////////////////////////////////////////////////
 // 首字母大写
 func (s String) UFrist() string {
 	str := string(s)
@@ -103,13 +101,13 @@ func (s String) ToInt() Int {
 		i, _ := strconv.Atoi(str)
 		return Int(i)
 	}
-	return Int(0)
+	return Int(-1)
 }
 
 // 字符串转浮点数
 func (s String) ToFloat() Float {
 	str := string(s)
-	if match, _ := regexp.MatchString(`^[0-9]+(\.[0-9]+)$`, str); match {
+	if match, _ := regexp.MatchString(`^[0-9]+(\.[0-9]+)?$`, str); match {
 		f, _ := strconv.ParseFloat(str, 64)
 		return Float(f)
 	}
@@ -118,12 +116,18 @@ func (s String) ToFloat() Float {
 
 // 字符串转布尔值
 func (s String) ToBool() Bool {
-	str := string(s)
-	if match, _ := regexp.MatchString(`^(true|false)$`, strings.ToLower(str)); match {
-		b, _ := strconv.ParseBool(str)
-		return Bool(b)
+	str := strings.ToLower(string(s))
+	b, _ := strconv.ParseBool(str)
+	return Bool(b)
+}
+
+// 分割字符串
+func (s String) Split(str string) []string {
+	list := make([]string, 0)
+	for _, v := range strings.Split(s.ToString(), str) {
+		list = append(list, v)
 	}
-	return Bool(false)
+	return list
 }
 
 // 目录/文件扫描
@@ -169,6 +173,75 @@ func (s String) ToString() string {
 	return string(s)
 }
 
+// 泛数据相关 //////////////////////////////////////////////////////////////////
+// 获取数据的类型，为nil时返回空字符串
+func TType(t interface{}) string {
+	if RV(t).IsValid() {
+		return RT(t).String()
+	}
+	return ""
+}
+
+// 获取数据的最终数值，基础数据类型的数值
+func TValue(obj interface{}, args ...bool) interface{} {
+	noPointer := false
+	if len(args) > 0 {
+		noPointer = args[0]
+	}
+	switch TType(obj) {
+	case "app.T":
+		v := reflect.Value(obj.(T))
+		if v.IsValid() {
+			obj = v.Interface()
+			return TValue(obj, noPointer)
+		}
+		return nil
+	case "reflect.Value":
+		obj = obj.(reflect.Value).Interface()
+		return TValue(obj, noPointer)
+	case "interface {}":
+		ov := RV(obj)
+		if ov.IsValid() {
+			obj = ov.Elem()
+			return TValue(obj, noPointer)
+		}
+		return nil
+	default:
+		ov := RV(obj)
+		if ov.IsValid() {
+			if noPointer {
+				ot := TType(obj)
+				if strings.HasPrefix(ot, "*") {
+					obj = ov.Elem()
+					return TValue(obj, noPointer)
+				}
+			}
+			return obj
+		}
+		return nil
+	}
+}
+
+// 获取泛对象
+func RV(t interface{}) reflect.Value {
+	return reflect.ValueOf(t)
+}
+
+// 获取泛类型
+func RT(t interface{}) reflect.Type {
+	return reflect.TypeOf(t)
+}
+
+// 实例化T对象
+func TT(t interface{}, args ...bool) T {
+	t = TValue(t, args...)
+	tp := TType(t)
+	if tp == "" {
+		return T(RV(nil))
+	}
+	return T(RV(t))
+}
+
 // 校验是否为有效参数
 func (t T) IsValid() bool {
 	return reflect.Value(t).IsValid()
@@ -179,7 +252,7 @@ func (t T) ToString() string {
 	if !t.IsValid() {
 		return ""
 	}
-	vv := reflect.ValueOf(TT(t).MapParse()).Interface()
+	vv := TValue(t, true)
 	switch vv.(type) {
 	case string:
 		return vv.(string)
@@ -207,30 +280,26 @@ func (t T) ToString() string {
 }
 
 // 对象/数组再解析，便于转成JSON字符串
-func (t T) MapParse() interface{} {
-	if !t.IsValid() {
+func (t T) ToMS() interface{} {
+	obj := TValue(t, true)
+	if obj == nil {
 		return nil
 	}
-	v := reflect.Value(t)
-	tt := v.Type().String()
-	if tt == "interface {}" {
-		v = v.Elem()
-		tt = v.Type().String()
-	}
-	if strings.HasPrefix(tt, "[]") {
+	v, tp := RV(obj), TType(obj)
+	if strings.HasPrefix(tp, "[]") {
 		result := make([]interface{}, 0)
 		for i := 0; i < v.Len(); i++ {
-			vv := T(v.Index(i)).MapParse()
+			vv := TT(v.Index(i), true).ToMS()
 			result = append(result, vv)
 		}
 		return result
-	} else if strings.HasPrefix(tt, "map[") {
+	} else if strings.HasPrefix(tp, "map[") {
 		result := make(map[string]interface{})
 		for _, k := range v.MapKeys() {
-			key := T(k).ToString()
-			if key != "" {
-				kv := v.MapIndex(k)
-				result[key] = T(kv).MapParse()
+			kk := TValue(k, true)
+			if kk != nil {
+				key := TT(kk).ToString()
+				result[key] = TT(v.MapIndex(k), true).ToMS()
 			}
 		}
 		return result
@@ -239,130 +308,109 @@ func (t T) MapParse() interface{} {
 }
 
 // 根据KEY获取数据，针对数组和对象
-func (t T) GetValue(key string, isStrict bool) T {
-	v := reflect.ValueOf(t.MapParse())
+func (t T) GValue(key string, isStrict bool) T {
 	match, _ := regexp.MatchString(`^[0-9a-zA-Z_\/]+(\.[0-9a-zA-Z_\/]+)*$`, key)
-	if (!v.IsValid()) || (!match) {
+	if !match {
 		return TT(nil)
 	}
-	tt := v.Type().String()
-	if tt == "interface {}" {
-		v = v.Elem()
-		return TT(v).GetValue(key, isStrict)
-	}
-	if tt == "app.T" {
-		return v.Interface().(T).GetValue(key, isStrict)
-	}
-	if tt == "reflect.Value" {
-		v = v.Interface().(reflect.Value)
-		tt = v.Type().String()
-	}
-	isMap, isArr := strings.HasPrefix(tt, "map["), strings.HasPrefix(tt, "[]")
-	if !(isMap || isArr) {
+	obj := t.ToMS()
+	if obj == nil {
 		return TT(nil)
 	}
-	keys := strings.Split(key, ".")
-	nk, kv := -1, reflect.ValueOf(keys[0])
-	if match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)$`, keys[0]); match {
-		nk, _ = strconv.Atoi(keys[0])
+	tp := TType(obj)
+	IsMap, IsArr := strings.HasPrefix(tp, "map["), strings.HasPrefix(tp, "[]")
+	if !(IsMap || IsArr) {
+		return TT(nil)
 	}
-	if isMap {
-		vv := v.MapIndex(kv)
+	keys := String(key).Split(".")
+	nk, ov := int(String(keys[0]).ToInt()), RV(obj)
+	if IsMap {
+		kv := RV(keys[0])
+		vv := RV(TValue(ov.MapIndex(kv), true))
 		if (!vv.IsValid()) && (!isStrict) {
 			tmp := make(map[string]interface{})
-			for _, mk := range v.MapKeys() {
-				if mk.Type().String() == "string" {
-					mks := mk.String()
-					if strings.HasPrefix(mks, keys[0]+".") {
-						mks = mks[len(keys[0]+"."):]
-						tmp[mks] = v.MapIndex(mk).Interface()
-					}
+			for _, mk := range ov.MapKeys() {
+				mktmp := TValue(mk, true)
+				if mktmp == nil {
+					continue
+				}
+				mktype := TType(mktmp)
+				if mktype != "string" {
+					continue
+				}
+				mkey := mk.String()
+				if strings.HasPrefix(mkey, keys[0]+".") {
+					mkey = mkey[len(keys[0]+"."):]
+					tmp[mkey] = TValue(ov.MapIndex(mk).Interface())
 				}
 			}
 			if len(tmp) > 0 {
-				vv = reflect.ValueOf(tmp)
+				vv = RV(tmp)
 			}
 		}
 		if (!vv.IsValid()) && (nk > -1) {
-			vv = v.MapIndex(reflect.ValueOf(nk))
+			vv = ov.MapIndex(RV(nk))
 		}
 		if vv.IsValid() {
 			if len(keys) > 1 {
 				key = strings.Join(keys[1:], ".")
-				return T(vv).GetValue(key, isStrict)
+				return TT(vv, true).GValue(key, isStrict)
 			}
-			return T(vv)
+			return TT(vv, true)
 		}
 	} else if nk > -1 {
-		vv := v.Index(nk)
+		vv := ov.Index(nk)
 		if vv.IsValid() {
 			if len(keys) > 1 {
 				key = strings.Join(keys[1:], ".")
-				return T(vv).GetValue(key, isStrict)
+				return TT(vv, true).GValue(key, isStrict)
 			}
-			return T(vv)
+			return TT(vv, true)
 		}
 	}
 	return TT(nil)
 }
 
-// 返回真实数值
-func (t T) Value() interface{} {
-	if !t.IsValid() {
-		return nil
-	}
-	v := reflect.Value(t).Interface()
-	vv := reflect.ValueOf(v)
-	tp := vv.Type().String()
-	if tp == "reflect.Value" {
-		vv = reflect.ValueOf(v.(reflect.Value).Interface())
-		return T(vv).Value()
-	}
-	if tp == "interface {}" {
-		vv = reflect.ValueOf(vv.Elem())
-		return T(vv).Value()
-	}
-	return v
-}
-
 // 根据条件取对应值
 func (t *T) SwitchValue(conditions bool, trueValue interface{}, falseValue interface{}) interface{} {
 	if conditions {
-		*t = TT(trueValue)
+		*t = TT(trueValue, true)
 	} else {
-		*t = TT(falseValue)
+		*t = TT(falseValue, true)
 	}
 	return *t
 }
 
 // 判断是否为文件
 func (t T) IsFile(checkIsFileArray bool) bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
+	tp := TType(obj)
 	if checkIsFileArray {
-		return reflect.Value(t).Type().String() == "[]*multipart.FileHeader"
+		return tp == "[]*multipart.FileHeader"
 	}
-	return reflect.Value(t).Type().String() == "*multipart.FileHeader"
+	return tp == "multipart.FileHeader"
 }
 
 // 判断是否为字符串
 func (t T) IsString() bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
-	return reflect.Value(t).Type().String() == "string"
+	return TType(obj) == "string"
 }
 
 // 判断是否为整数
 func (t T) IsInt() bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
-	tp := reflect.Value(t).Type().String()
+	tp := TType(obj)
+	t = TT(obj)
 	if strings.HasPrefix(tp, "int") && (tp != "interface {}") {
 		return true
 	} else if t.IsString() {
@@ -374,15 +422,15 @@ func (t T) IsInt() bool {
 
 // 判断是否为浮点数
 func (t T) IsFloat() bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
-	tp := reflect.Value(t).Type().String()
+	tp := TType(obj)
 	if strings.HasPrefix(tp, "float") {
 		return true
 	} else if t.IsString() {
-		match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`, t.ToString())
+		match, _ := regexp.MatchString(`^(0|[1-9][0-9]*)(\.[0-9]+)?$`, TT(obj).ToString())
 		return match
 	}
 	return false
@@ -390,15 +438,15 @@ func (t T) IsFloat() bool {
 
 // 判断是否为布尔值
 func (t T) IsBool() bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
-	tp := reflect.Value(t).Type().String()
+	tp := TType(obj)
 	if strings.HasPrefix(tp, "bool") {
 		return true
 	} else if t.IsString() {
-		match, _ := regexp.MatchString(`^(TRUE|FALSE|YES|NO)$`, strings.ToUpper(t.ToString()))
+		match, _ := regexp.MatchString(`^(TRUE|FALSE)$`, strings.ToUpper(TT(obj).ToString()))
 		return match
 	}
 	return false
@@ -406,11 +454,11 @@ func (t T) IsBool() bool {
 
 // 判断是否为数组
 func (t T) IsArray() bool {
-	if !t.IsValid() {
+	obj := TValue(t, true)
+	if obj == nil {
 		return false
 	}
-	t = TT(t)
-	tp := reflect.Value(t).Type().String()
+	tp := TType(obj)
 	if strings.HasPrefix(tp, "[]") {
 		return true
 	}
@@ -419,10 +467,11 @@ func (t T) IsArray() bool {
 
 // 判断是否为空
 func (t T) IsEmpty() bool {
-	if !t.IsValid() {
-		return true
+	obj := TValue(t, true)
+	if obj == nil {
+		return false
 	}
-	t = TT(t)
+	t = TT(obj)
 	if t.IsString() && (t.ToString() == "") {
 		return true
 	}

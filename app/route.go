@@ -2,9 +2,7 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 
@@ -25,12 +23,11 @@ func (s String) R(key string) (T, error) {
 		for _, dir := range String("route").Scan("", true) {
 			result[dir] = make(map[string][]interface{})
 			v.AddConfigPath("route/" + dir)
-			for _, file := range String("route/"+dir).Scan(".yml", false) {
+			for _, file := range String("route/" + dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
 				v.SetConfigName(rname)
 				if err := v.ReadInConfig(); err != nil {
-					fmt.Println("[ERROR] 路由文件加载失败....")
-					os.Exit(1)
+					DIE("路由文件加载失败....")
 				}
 				items := make(map[string]interface{})
 				for _, k := range v.AllKeys() {
@@ -41,19 +38,16 @@ func (s String) R(key string) (T, error) {
 				}
 			}
 		}
-		tmp := TT(TT(result).MapParse())
+		tmp := TT(TT(result).ToMS(), true)
 		route = &tmp
 	})
 	path := s.ToString()
 	if path == "" {
 		return TT(nil), errors.New("参数错误")
 	}
-	if key != "" {
-		key = path + "." + key
-	} else {
-		key = path
-	}
-	result := (*route).GetValue(key, false)
+	keyTmp := TT(key)
+	key = (&keyTmp).SwitchValue(key != "", path+"."+key, path).(T).ToString()
+	result := (*route).GValue(key, false)
 	return result, nil
 }
 
@@ -63,30 +57,25 @@ func (s String) RH() {
 		if s.ToString() != dir {
 			continue
 		}
-		for _, file := range String("route/"+dir).Scan(".yml", false) {
-			rname := strings.Replace(file, ".yml", "", -1)
-			routes, _ := s.R(rname)
+		for _, file := range String("route/" + dir).Scan(".yml", false) {
+			routes, _ := s.R(strings.Replace(file, ".yml", "", -1))
 			if routes.IsValid() {
-				for _, item := range routes.Value().([]interface{}) {
+				for _, item := range TValue(routes).([]interface{}) {
 					route := item.(map[string]interface{})
 					params := route["params"].([]interface{})
-					// handler := route["handler"].(string)
-					// need_auth := route["need_auth"].(string)
-					// with_platform := route["with_platform"].(string)
+					needAuth := route["need_auth"].(bool)
+					withPlatform := route["with_platform"].(bool)
+					handler := route["handler"].(string)
 					//
 					http.HandleFunc("/"+route["route"].(string), func(rep http.ResponseWriter, req *http.Request) {
 						defer PHandler()
+						// 初始访问
 						h := NT(rep, req)
-						h.Verify(params)
-						IC, _ := String("app").C("is_cors")
-						if IC.IsValid() && IC.IsBool() && IC.Value().(bool) {
-							h.Cors()
-						}
-
-						// do more ...
-						h.Output(200, 4534543)
+						// 参数校验
+						h.Verify(params, needAuth, withPlatform)
+						// 业务实现
+						h.RHH(handler)
 					})
-
 				}
 			}
 		}

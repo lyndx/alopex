@@ -2,8 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -26,8 +24,7 @@ func (s String) C(key string) (T, error) {
 			cname := strings.Replace(file, ".yml", "", -1)
 			v.SetConfigName(cname)
 			if err := v.ReadInConfig(); err != nil {
-				fmt.Println("[ERROR] 配置文件加载失败....")
-				os.Exit(1)
+				DIE("配置文件加载失败....")
 			}
 			items := make(map[string]interface{})
 			for _, k := range v.AllKeys() {
@@ -35,7 +32,7 @@ func (s String) C(key string) (T, error) {
 			}
 			result[cname] = items
 		}
-		tmp := TT(TT(result).MapParse())
+		tmp := TT(TT(result).ToMS(), true)
 		config = &tmp
 	})
 	path := s.ToString()
@@ -47,7 +44,7 @@ func (s String) C(key string) (T, error) {
 	} else {
 		key = path
 	}
-	result := TT((*config).GetValue(key, false))
+	result := TT((*config).GValue(key, false))
 	if !result.IsValid() {
 		return TT(nil), errors.New("配置项数据获取失败")
 	}
