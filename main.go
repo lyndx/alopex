@@ -1,9 +1,9 @@
 package main
 
 import (
-	"net/http"
-
 	"alopex/app"
+	_ "alopex/controller/backend"
+	. "net/http"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 		app.String("backend").RH()
 	}
 	// 监听服务端口
-	if err := http.ListenAndServe(":81", nil); err != nil {
+	if err := ListenAndServe(":81", nil); err != nil {
 		app.DIE("服务启动异常，" + err.Error())
 	}
 

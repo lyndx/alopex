@@ -6,6 +6,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/go-ffmt/ffmt"
 	"github.com/spf13/viper"
 )
 
@@ -23,7 +24,7 @@ func (s String) R(key string) (T, error) {
 		for _, dir := range String("route").Scan("", true) {
 			result[dir] = make(map[string][]interface{})
 			v.AddConfigPath("route/" + dir)
-			for _, file := range String("route/" + dir).Scan(".yml", false) {
+			for _, file := range String("route/"+dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
 				v.SetConfigName(rname)
 				if err := v.ReadInConfig(); err != nil {
@@ -48,17 +49,18 @@ func (s String) R(key string) (T, error) {
 	keyTmp := TT(key)
 	key = (&keyTmp).SwitchValue(key != "", path+"."+key, path).(T).ToString()
 	result := (*route).GValue(key, false)
+	ffmt.Puts(TValue(result))
 	return result, nil
 }
 
 // 路由设置
 func (s String) RH() {
-	for _, dir := range String("route").Scan("", true) {
-		if s.ToString() != dir {
+	for _, module := range String("route").Scan("", true) {
+		if s.ToString() != module {
 			continue
 		}
-		for _, file := range String("route/" + dir).Scan(".yml", false) {
-			routes, _ := s.R(strings.Replace(file, ".yml", "", -1))
+		for _, file := range String("route/"+module).Scan(".yml", false) {
+			routes, _ := String(module).R(strings.Replace(file, ".yml", "", -1))
 			if routes.IsValid() {
 				for _, item := range TValue(routes).([]interface{}) {
 					route := item.(map[string]interface{})
@@ -67,12 +69,15 @@ func (s String) RH() {
 					withPlatform := route["with_platform"].(bool)
 					handler := route["handler"].(string)
 					//
-					http.HandleFunc("/"+route["route"].(string), func(rep http.ResponseWriter, req *http.Request) {
+					http.HandleFunc("/"+module+"/"+route["route"].(string), func(rep http.ResponseWriter, req *http.Request) {
 						defer PHandler()
 						// 初始访问
 						h := NT(rep, req)
 						// 参数校验
 						h.Verify(params, needAuth, withPlatform)
+
+						CTodo(h, module+".auth", "login")
+
 						// 业务实现
 						h.RHH(handler)
 					})

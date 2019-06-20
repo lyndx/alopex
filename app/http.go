@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -31,9 +32,10 @@ func NT(rep http.ResponseWriter, req *http.Request) *Http {
 		rep.Header().Set("content-type", "text/plain")
 		rep.Write([]byte("Options Request!"))
 		panic("EOF")
+	} else {
+		rep.Header().Set("content-type", "application/json")
 	}
-	req.Header.Set("content-type", "application/json")
-	// 新建构造
+	//
 	h := new(Http)
 	h.Rep = rep
 	h.Req = req
@@ -147,7 +149,7 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 }
 
 // 参数校验
-func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool){
+func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
 	params := *(*h).Params
 	result, isTrue, messages := make(map[string]interface{}), true, make([]string, 0)
 	for _, item := range configs {
@@ -186,6 +188,9 @@ func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool){
 
 // 请求返回
 func (h *Http) Output(code int, args ...interface{}) {
+	defer func() {
+		panic("EOF")
+	}()
 	if h.Rep == nil {
 		panic("EOF")
 	}
@@ -221,12 +226,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PA[k] = fitems
 				} else if k == "content-type" {
@@ -254,5 +259,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 
 // 控制器
 func (h *Http) RHH(handler string) {
+	hh := String(handler).Split(".")
+	if len(hh) != 2 {
+		h.Output(402, "请求失败", "路由配置中Handler项格式错误")
+	}
+	contrl, action := hh[0], hh[1]
+
+	fmt.Println(contrl, action)
 
 }
