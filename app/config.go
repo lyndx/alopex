@@ -14,7 +14,7 @@ var (
 )
 
 // 加载配置
-func (s String) C(key string) (T, error) {
+func (s String) C(args ...string) (T, error) {
 	configOnce.Do(func() {
 		result := make(map[string]map[string]interface{})
 		v := viper.New()
@@ -39,10 +39,9 @@ func (s String) C(key string) (T, error) {
 	if path == "" {
 		return TT(nil), errors.New("参数错误")
 	}
-	if key != "" {
-		key = path + "." + key
-	} else {
-		key = path
+	key := path
+	if len(args) == 1 {
+		key += "." + args[0]
 	}
 	result := TT((*config).GValue(key, false))
 	if !result.IsValid() {

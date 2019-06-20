@@ -6,9 +6,9 @@ mysql:
   main_db:
     host: 127.0.0.1
     port: 3306
-    username: root
-    password: root
-    database: ckgame
+    username: allSysPlatDb
+    password: allSysPlatDb
+    database: maindb
     charset: utf8
     parseTime: true
     loc: Local
@@ -16,16 +16,15 @@ mysql:
     qp:
       host: 127.0.0.1
       port: 3306
-      username: root
-      password: root
-      database: maindb
+      username: ckgame
+      password: ckgame
+      database: ckgame
       charset: utf8
       parseTime: true
       loc: Local
 # SQLite配置
 sqlite:
-  a: true
-  b: sdfsdfs
+  a: data/app.db
 
 
 

@@ -1,15 +1,15 @@
 package backend
 
-import "alopex/app"
+import (
+	"alopex/app"
+)
 
-type AuthController struct {
-}
+type AuthController struct {}
 
 func init() {
 	app.CJoin("auth", AuthController{})
 }
 
 func (ctrl AuthController) Login(h *app.Http) {
-
-	h.Output(444, "xddd")
+	h.Output(200, h.P("username"))
 }

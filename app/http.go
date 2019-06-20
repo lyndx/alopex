@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -186,6 +185,43 @@ func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
 	}
 }
 
+// 获取指定参数
+func (h *Http) P(args ...string) interface{} {
+	ps := (*h.Params)["__"].(map[string]interface{})
+	if len(args) == 0 {
+		return ps
+	}
+	key := args[0]
+	if key == "*" {
+		return ps
+	}
+	HP, HS := strings.HasPrefix(key, "%"), strings.HasSuffix(key, "%")
+	if HP || HS {
+		result := make(map[string]interface{})
+		if HP {
+			kk := strings.TrimLeft(key, "%")
+			for k, v := range ps {
+				if strings.HasSuffix(k, kk) {
+					result[k] = v
+				}
+			}
+		}
+		if HS {
+			kk := strings.TrimRight(key, "%")
+			for k, v := range ps {
+				if strings.HasPrefix(k, kk) {
+					result[k] = v
+				}
+			}
+		}
+		return result
+	}
+	if p, ok := ps[key]; ok {
+		return p
+	}
+	return nil
+}
+
 // 请求返回
 func (h *Http) Output(code int, args ...interface{}) {
 	defer func() {
@@ -220,18 +256,18 @@ func (h *Http) Output(code int, args ...interface{}) {
 	}
 	result["duration"] = time.Since(h.STime).String()
 	if t, _ := String("app").C("is_developer"); t.IsValid() && t.IsBool() && TValue(t).(bool) {
-		PA, PB := make(map[string]interface{}), (*h.Params)["__"]
+		PA, PB := make(map[string]interface{}), make(map[string]interface{})
 		for k, v := range *h.Params {
 			if k != "__" {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PA[k] = fitems
 				} else if k == "content-type" {
@@ -239,6 +275,24 @@ func (h *Http) Output(code int, args ...interface{}) {
 				} else {
 					PA[k] = v
 				}
+			}
+		}
+		for k, v := range (*h.Params)["__"].(map[string]interface{}) {
+			vv := TT(v, true)
+			if vv.IsFile(false) {
+				f := v.(*multipart.FileHeader)
+				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+			} else if vv.IsFile(true) {
+				fs := v.([]*multipart.FileHeader)
+				fitems := make([]map[string]interface{}, 0)
+				for _, f := range fs {
+					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+				}
+				PB[k] = fitems
+			} else if k == "content-type" {
+				PB[k] = String(v.(string)).Split(";")[0]
+			} else {
+				PB[k] = v
 			}
 		}
 		result["request"] = map[string]interface{}{
@@ -258,13 +312,11 @@ func (h *Http) Output(code int, args ...interface{}) {
 }
 
 // 控制器
-func (h *Http) RHH(handler string) {
+func (h *Http) RHH(module string, handler string) {
 	hh := String(handler).Split(".")
 	if len(hh) != 2 {
 		h.Output(402, "请求失败", "路由配置中Handler项格式错误")
 	}
-	contrl, action := hh[0], hh[1]
-
-	fmt.Println(contrl, action)
-
+	controller, action := hh[0], hh[1]
+	h.CTodo(module, controller, action)
 }

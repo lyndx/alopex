@@ -1,9 +1,7 @@
 package app
 
 import (
-	"fmt"
-
-	"github.com/go-ffmt/ffmt"
+	"reflect"
 )
 
 type Controller struct{}
@@ -22,8 +20,15 @@ func CJoin(name string, controller interface{}) {
 	}
 }
 
-func CTodo(h *Http, path string, action string) {
-	fmt.Println(path, controllerMapper[path], "------------------")
-	ffmt.Puts(controllerMapper)
-	fmt.Println("---------")
+func (h *Http) CTodo(module string, controller string, action string) {
+	key := module + "." + controller
+	if _, ok := controllerMapper[key]; !ok {
+		h.Output(402, "请求失败", "请求执行业务方法不存在")
+	}
+	obj := controllerMapper[key]
+	handler := RV(obj).MethodByName(String(action).UFrist())
+	if !handler.IsValid() {
+		h.Output(402, "请求失败", "请求执行业务方法不存在")
+	}
+	handler.Call([]reflect.Value{RV(h)})
 }
