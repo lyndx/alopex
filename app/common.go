@@ -89,11 +89,9 @@ func DIE(message string, args ...bool) {
 // 首字母大写
 func (s String) UFrist() string {
 	str := string(s)
-	if str == "" {
-		return str
+	if str != "" {
+		str = strings.ToUpper(string([]rune(str)[0])) + str[1:]
 	}
-	str = strings.ToLower(str)
-	str = strings.ToUpper(string([]rune(str)[0])) + str[1:]
 	return str
 }
 
@@ -131,6 +129,16 @@ func (s String) Split(str string) []string {
 		list = append(list, v)
 	}
 	return list
+}
+
+// 判断文件是否存在
+func (s String) IsExist(file string) bool {
+	path, err := filepath.Abs(s.ToString())
+	if err != nil {
+		return false
+	}
+	_, err = os.Stat(path + string(os.PathSeparator) + file)
+	return err == nil
 }
 
 // 目录/文件扫描
@@ -248,6 +256,32 @@ func TT(t interface{}, args ...bool) T {
 		return T(RV(nil))
 	}
 	return T(RV(t))
+}
+
+// 数组去掉空值,字符串数组去掉空字符串，其他数组去掉nil值
+func (t *T) Filter(args ...func(value reflect.Value) bool) []interface{} {
+	obj := TValue(t)
+	if !TT(obj).IsArray() {
+		return nil
+	}
+	list := make([]interface{}, 0)
+	ov := RV(obj)
+	length := ov.Len()
+	for i := 0; i < length; i++ {
+		v := ov.Index(i)
+		ot := v.Type().String()
+		isOk := (v.IsValid() && (ot != "string")) || ((ot == "string") && (v.Interface() != ""))
+		if !isOk {
+			continue
+		}
+		if (len(args) > 0) && (!args[0](v)) {
+			continue
+		}
+		list = append(list, v.Interface())
+	}
+	vl := TT(list)
+	t = &vl
+	return list
 }
 
 // 校验是否为有效参数

@@ -1,29 +1,29 @@
 package app
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
-	"github.com/go-ffmt/ffmt"
-	"github.com/jinzhu/gorm"
-
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/grsmv/inflect"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Model struct {
-	db *gorm.DB
+	db *sql.DB
 }
 
-var dbs map[string]map[string]*gorm.DB
+var dbs map[string]map[string]*sql.DB
 
 func init() {
 	t, err := String("database").C()
 	if err != nil {
 		DIE("数据库初始化失败")
 	}
-	dbs = map[string]map[string]*gorm.DB{"mysql": {}, "sqlite": {}}
+	dbs = map[string]map[string]*sql.DB{"mysql": {}, "sqlite": {}}
 	MySQL, SQLite := map[string]map[string]string{}, map[string]string{}
 	for k, v := range TValue(t).(map[string]interface{}) {
 		kk := String(k).Split(".")
@@ -61,32 +61,35 @@ func init() {
 		if IsDeveloper {
 			fmt.Println("连接数据库Mysql[" + key + "]：" + cs)
 		}
-		db, err := gorm.Open("mysql", cs)
+		db, err := sql.Open("mysql", cs)
 		if err != nil {
 			DIE("数据库Mysql[" + key + "]连接失败，" + err.Error())
 		}
-		if err = db.DB().Ping(); err != nil {
+		if err = db.Ping(); err != nil {
 			DIE("数据库Mysql[" + key + "]Ping失败" + err.Error())
 		}
-		db.LogMode(IsDeveloper)
-		db.DB().SetMaxIdleConns(10)
-		db.DB().SetMaxOpenConns(100)
+		db.SetMaxIdleConns(100)
+		db.SetMaxOpenConns(1000)
+		db.SetConnMaxLifetime(100 * time.Second)
 		dbs["mysql"][key] = db
 	}
 	// SQLite初始化
 	for key, file := range SQLite {
-		db, err := gorm.Open("sqlite3", file)
+		db, err := sql.Open("sqlite3", file)
 		if err != nil {
 			DIE("数据库Sqlite[" + key + "]连接失败，" + err.Error())
 		}
-		fmt.Println("连接数据库SQLite[" + key + "]：" + file)
-		db.LogMode(IsDeveloper)
-		db.DB().SetMaxIdleConns(10)
-		db.DB().SetMaxOpenConns(100)
+		if err = db.Ping(); err != nil {
+			DIE("数据库Sqlite[" + key + "]Ping失败" + err.Error())
+		}
+		if IsDeveloper {
+			fmt.Println("连接数据库SQLite[" + key + "]：" + file)
+		}
 		dbs["sqlite"][key] = db
 	}
 }
 
+// 获取数据库连接
 func MD(key string) *Model {
 	m := Model{}
 	if TT(key).IsEmpty() {
@@ -108,35 +111,104 @@ func MD(key string) *Model {
 	return &m
 }
 
-type X struct {
-	Field   string
-	Type    string
-	Null    string
-	Key     string
-	Default interface{}
-	Extra   string
-}
-
-func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
-	if m.db == nil {
-		return nil, errors.New("数据库连接失败")
+// 检查表是否存在
+func (m *Model) HasTable(table string) (bool, error) {
+	if table == "" {
+		return false, errors.New("表名不能为空")
 	}
-	if TT(table).IsEmpty() {
-		return nil, errors.New("数据表名不能为空")
+	if m.db == nil {
+		return false, errors.New("数据库连接失效")
 	}
 	db := m.db
-	if !db.HasTable(table) {
-		return nil, errors.New("数据表不存在")
+	row := db.QueryRow("SHOW TABLES LIKE '" + table + "'")
+	var tb string
+	if err := row.Scan(&tb); err != nil {
+		return false, err
 	}
-	tables := make([]string, 0)
-	db.Raw("SHOW TABLES").Pluck("", &tables)
-
-	for _, tb := range tables {
-
-		ddl := make([]string, 0)
-		db.Raw("select * from information_schema.columns where table_name='"+tb+"'").Pluck("column_name", &ddl)
-		ffmt.Puts(ddl)
+	if tb == table {
+		return true, nil
 	}
+	return false, errors.New("表不存在")
+}
 
-	return tables, nil
+// 反转DDL为模型构造文件
+func (m *Model) TM(ddl map[string]map[string]map[string]map[string]string) {
+	//if file == "" {
+	//	DIE("文件错误.....")
+	//}
+	//file = inflect.Pluralize(file)
+	//if String("model").IsExist(file+".go") {
+	//
+	//}
+	//s := Pluralize("ip")
+	//fmt.Println(s)
+}
+
+// 查询
+func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
+	_, err := m.HasTable(table)
+	if err != nil {
+		return nil, err
+	}
+	db := m.db
+	rows, err := db.Query("SHOW TABLES")
+	if err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	tables := make(map[string]map[string]map[string]string)
+	for rows.Next() {
+		tb := ""
+		if err := rows.Scan(&tb); err != nil {
+			return nil, err
+		}
+		if tb != "" {
+			tables[tb] = make(map[string]map[string]string)
+			rs, err := db.Query("DESC " + tb)
+			if err != nil {
+				return nil, err
+			}
+			if err := rs.Err(); err != nil {
+				return nil, err
+			}
+			for rs.Next() {
+				f, t, n, k, d, e := "", "", "", "", sql.NullString{}, ""
+				if err := rs.Scan(&f, &t, &n, &k, &d, &e); err != nil {
+					return nil, err
+				}
+				if f != "" {
+					fd := map[string]string{
+						"type":    strings.ToUpper(t),
+						"is_null": strings.ToUpper(n),
+						"key":     strings.ToUpper(k),
+						"default": d.String,
+						"extra":   strings.ToUpper(e),
+					}
+					tables[tb][f] = fd
+				}
+			}
+		}
+	}
+	models := map[string]map[string]map[string]map[string]string{}
+	for tb, ddl := range tables {
+		ws := String(tb).Split("_")
+		if len(ws) == 1 {
+			key := strings.ToLower(inflect.Pluralize(tb))
+			tb = String(key).UFrist()
+			models[key] = map[string]map[string]map[string]string{tb: ddl}
+		} else {
+			tb = String(inflect.CamelizeDownFirst(tb)).UFrist()
+			key := strings.ToLower(inflect.Pluralize(ws[0]))
+			if _, ok := models[key]; ok {
+				models[key][tb] = ddl
+			} else {
+				models[key] = map[string]map[string]map[string]string{tb: ddl}
+			}
+		}
+	}
+	rows.Close()
+	m.TM(models)
+	return models, nil
 }
