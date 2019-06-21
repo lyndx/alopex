@@ -16,15 +16,15 @@ mysql:
     qp:
       host: 127.0.0.1
       port: 3306
-      username: ckgame
-      password: ckgame
+      username: root
+      password: root
       database: ckgame
       charset: utf8
       parseTime: true
       loc: Local
 # SQLite配置
 sqlite:
-  a: data/app.db
+#  a: data/app.db
 
 
 

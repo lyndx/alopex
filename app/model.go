@@ -1,9 +1,11 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/go-ffmt/ffmt"
 	"github.com/jinzhu/gorm"
 
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -25,15 +27,23 @@ func init() {
 	MySQL, SQLite := map[string]map[string]string{}, map[string]string{}
 	for k, v := range TValue(t).(map[string]interface{}) {
 		kk := String(k).Split(".")
-		switch kk[0] {
-		case "mysql":
-			key, field := strings.Join(kk[1:len(kk)-1], "."), kk[len(kk)-1]
-			if _, ok := MySQL[key]; !ok {
-				MySQL[key] = make(map[string]string)
+		if len(kk) > 1 {
+			switch kk[0] {
+			case "mysql":
+				key, field := strings.Join(kk[1:len(kk)-1], "."), kk[len(kk)-1]
+				if _, ok := MySQL[key]; !ok {
+					MySQL[key] = make(map[string]string)
+				}
+				vv := TT(v)
+				if vv.IsValid() {
+					MySQL[key][field] = vv.ToString()
+				}
+			case "sqlite":
+				key, vv := kk[1], TT(v)
+				if vv.IsValid() {
+					SQLite[key] = vv.ToString()
+				}
 			}
-			MySQL[key][field] = TT(v).ToString()
-		case "sqlite":
-			SQLite[kk[1]] = TT(v).ToString()
 		}
 	}
 	// 是否为开发模式
@@ -77,26 +87,56 @@ func init() {
 	}
 }
 
-func MD(key string) Model {
+func MD(key string) *Model {
+	m := Model{}
 	if TT(key).IsEmpty() {
-		return Model{}
+		return &m
 	}
 	kk := String(key).Split(".")
 	if len(kk) < 2 {
-		return Model{}
+		return &m
 	}
 	dt := strings.ToLower(kk[0])
 	if _, ok := dbs[dt]; !ok {
-		return Model{}
+		return &m
 	}
 	dd := strings.Join(kk[1:], ".")
 	if _, ok := dbs[dt][dd]; !ok {
-		return Model{}
+		return &m
 	}
-	return Model{dbs[dt][dd]}
+	m = Model{dbs[dt][dd]}
+	return &m
 }
 
-func (m Model) Select(table string, args ...interface{}) map[string]interface{} {
+type X struct {
+	Field   string
+	Type    string
+	Null    string
+	Key     string
+	Default interface{}
+	Extra   string
+}
 
-	return nil
+func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
+	if m.db == nil {
+		return nil, errors.New("数据库连接失败")
+	}
+	if TT(table).IsEmpty() {
+		return nil, errors.New("数据表名不能为空")
+	}
+	db := m.db
+	if !db.HasTable(table) {
+		return nil, errors.New("数据表不存在")
+	}
+	tables := make([]string, 0)
+	db.Raw("SHOW TABLES").Pluck("", &tables)
+
+	for _, tb := range tables {
+
+		ddl := make([]string, 0)
+		db.Raw("select * from information_schema.columns where table_name='"+tb+"'").Pluck("column_name", &ddl)
+		ffmt.Puts(ddl)
+	}
+
+	return tables, nil
 }
