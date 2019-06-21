@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -131,26 +133,92 @@ func (m *Model) HasTable(table string) (bool, error) {
 	return false, errors.New("表不存在")
 }
 
-// 反转DDL为模型构造文件
-func (m *Model) TM(ddl map[string]map[string]map[string]map[string]string) {
-	//if file == "" {
-	//	DIE("文件错误.....")
-	//}
-	//file = inflect.Pluralize(file)
-	//if String("model").IsExist(file+".go") {
-	//
-	//}
-	//s := Pluralize("ip")
-	//fmt.Println(s)
+type sds struct {
+	Id        int    `N:"id" X:"width=11,primary,unsigned,not_null,auto_increment"`
+	UserName  string `N:"username" X:"length=5,not_null,unique"`
+	Password  string `N:"password" X:"length=5,not_null"`
+	CreatedAt string `N:"created_at" X:"timestamp,default=current_timestamp"`
+	UpdatedAt string `N:"updated_at" X:"timestamp,default=current_timestamp,on_update_current_timestamp"`
+	Status    int    `N:"status" X:"width=1,default=1"`
 }
 
-// 查询
-func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
-	_, err := m.HasTable(table)
-	if err != nil {
-		return nil, err
+// 生成模型构造
+func (m *Model) TS(mn string, fs map[string]map[string]string) string {
+	str := "type " + String(mn).UFrist() + " struct {\n"
+	items, lfs := make([]string, 0), ""
+	for f, fd := range fs {
+		item := "%s@%s `N:\"%s\" X:\"%s\"`"
+		a, b, c, d := String(inflect.CamelizeDownFirst(f)).UFrist(), "string", f, make([]string, 0)
+		if len(lfs) < len(a) {
+			lfs = a
+		}
+		ft := String(fd["type"]).Split(" ")
+		if strings.HasSuffix(ft[0], "INT") {
+			b = "int"
+			d = append(d, "width="+strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1))
+		} else if ft[0] == "DECIMAL" {
+			b = "float"
+			x := String(strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1)).Split(",")
+			d = append(d, "width="+x[0], "prec="+x[1])
+		} else if ft[0] == "TIMESTAMP" {
+			d = append(d, "timestamp")
+		}
+		if len(ft) == 2 {
+			d = append(d, "unsigned")
+		}
+		if fd["is_null"] == "NO" {
+			d = append(d, "not_null")
+		}
+		if fd["key"] == "PRI" {
+			d = append(d, "primary")
+		}
+		if fd["key"] == "UNI" {
+			d = append(d, "unique")
+		}
+		if fd["default"] != "" {
+			def := fd["default"]
+			if def == "CURRENT_TIMESTAMP" {
+				def = "current_timestamp"
+			}
+			if (b == "string") && (def != "current_timestamp") {
+				def = "'" + def + "'"
+			}
+			d = append(d, "default="+def)
+		} else if fd["is_null"] == "YES" {
+			def := fd["default"]
+			if def == "CURRENT_TIMESTAMP" {
+				def = "current_timestamp"
+			}
+			if (b == "string") && (def != "current_timestamp") {
+				def = "'" + def + "'"
+			}
+			d = append(d, "default="+def)
+		}
+		if fd["extra"] == "AUTO_INCREMENT" {
+			d = append(d, "auto_increment")
+		} else if fd["extra"] == "ON UPDATE CURRENT_TIMESTAMP" {
+			d = append(d, "on_update_current_timestamp")
+		}
+		items = append(items, fmt.Sprintf(item, a, b, c, strings.Join(d, ","))+"\n")
 	}
+	sort.Sort(sort.StringSlice(items))
+	for _, v := range items {
+		tmp := String(v).Split("@")
+		f, length, max := tmp[0], len(tmp[0]), len(lfs)
+		for i := 0; i < (max-length)+1; i++ {
+			f += " "
+		}
+		str += "    " + f + tmp[1]
+	}
+	return str + "}"
+}
+
+// 获取表信息
+func (m *Model) getTablesDDL() (map[string]map[string]map[string]string, error) {
 	db := m.db
+	if db == nil {
+		return nil, errors.New("数据库连接失败.....")
+	}
 	rows, err := db.Query("SHOW TABLES")
 	if err != nil {
 		return nil, err
@@ -164,51 +232,83 @@ func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
 		if err := rows.Scan(&tb); err != nil {
 			return nil, err
 		}
-		if tb != "" {
-			tables[tb] = make(map[string]map[string]string)
-			rs, err := db.Query("DESC " + tb)
-			if err != nil {
+		rs, err := db.Query("DESC " + tb)
+		if err != nil {
+			return nil, err
+		}
+		if err := rs.Err(); err != nil {
+			return nil, err
+		}
+		fs := make(map[string]map[string]string)
+		for rs.Next() {
+			f, t, n, k, d, e := "", "", "", "", sql.NullString{}, ""
+			if err := rs.Scan(&f, &t, &n, &k, &d, &e); err != nil {
 				return nil, err
 			}
-			if err := rs.Err(); err != nil {
-				return nil, err
-			}
-			for rs.Next() {
-				f, t, n, k, d, e := "", "", "", "", sql.NullString{}, ""
-				if err := rs.Scan(&f, &t, &n, &k, &d, &e); err != nil {
-					return nil, err
-				}
-				if f != "" {
-					fd := map[string]string{
-						"type":    strings.ToUpper(t),
-						"is_null": strings.ToUpper(n),
-						"key":     strings.ToUpper(k),
-						"default": d.String,
-						"extra":   strings.ToUpper(e),
-					}
-					tables[tb][f] = fd
+			if f != "" {
+				fs[f] = map[string]string{
+					"type":    strings.ToUpper(t),
+					"is_null": strings.ToUpper(n),
+					"key":     strings.ToUpper(k),
+					"default": d.String,
+					"extra":   strings.ToUpper(e),
 				}
 			}
 		}
-	}
-	models := map[string]map[string]map[string]map[string]string{}
-	for tb, ddl := range tables {
-		ws := String(tb).Split("_")
-		if len(ws) == 1 {
-			key := strings.ToLower(inflect.Pluralize(tb))
-			tb = String(key).UFrist()
-			models[key] = map[string]map[string]map[string]string{tb: ddl}
-		} else {
-			tb = String(inflect.CamelizeDownFirst(tb)).UFrist()
-			key := strings.ToLower(inflect.Pluralize(ws[0]))
-			if _, ok := models[key]; ok {
-				models[key][tb] = ddl
-			} else {
-				models[key] = map[string]map[string]map[string]string{tb: ddl}
-			}
-		}
+		tables[tb] = fs
 	}
 	rows.Close()
-	m.TM(models)
-	return models, nil
+	return tables, nil
+}
+
+// 反转DDL为模型构造文件
+func (m *Model) TM() (bool, error) {
+	db := m.db
+	if db == nil {
+		return false, errors.New("数据库连接失败.....")
+	}
+	tables, err := m.getTablesDDL()
+	if err != nil {
+		return false, err
+	}
+	if len(tables) < 1 {
+		return false, errors.New("表数据解析失败.....")
+	}
+	fds := make(map[string][]string)
+	for tb, fs := range tables {
+		f := strings.ToLower(inflect.Pluralize(tb))
+		ws := String(tb).Split("_")
+		if len(ws) > 1 {
+			f = strings.ToLower(inflect.Pluralize(ws[0]))
+		}
+		if _, ok := fds[f]; !ok {
+			fds[f] = make([]string, 0)
+		}
+		mn := inflect.CamelizeDownFirst(tb)
+		fds[f] = append(fds[f], m.TS(mn, fs))
+	}
+	for file, ctx := range fds {
+		file = file + ".go"
+		if String("model").IsExist(file) {
+			if err := os.Remove("model/" + file); err != nil {
+				return false, err
+			}
+		}
+		_, err := String("model/" + file).Write("package model\n\n" + strings.Join(ctx, "\n\n"))
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// 查询
+func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
+	_, err := m.HasTable(table)
+	if err != nil {
+		return nil, err
+	}
+
+	// do more ...
+	return nil, nil
 }

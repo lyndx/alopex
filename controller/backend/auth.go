@@ -1,8 +1,6 @@
 package backend
 
 import (
-	"fmt"
-
 	"alopex/app"
 )
 
@@ -13,7 +11,6 @@ func init() {
 }
 
 func (ctrl AuthController) Login(h *app.Http) {
-	a, e := app.MD("mysql.games_db.qp").Select("users")
-	fmt.Println(e)
+	a, _ := app.MD("mysql.games_db.qp").Select("users")
 	h.Output(200, a)
 }

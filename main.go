@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	. "fmt"
 	. "net/http"
+	. "strings"
 
 	. "alopex/app"
 	_ "alopex/controller/backend"
@@ -12,9 +14,12 @@ func main() {
 	migrate := *flag.String("migrate", "mysql:games_db.qp", "迁移数据库表数据为模型构造，请填写[数据库类型（mysql/sqlite）:数据库名字]，如：mysql:ckgame")
 	flag.Parse()
 	if !TT(migrate).IsEmpty() {
-		// fmt.Println("\n开始执行 数据库表->模型构造 迁移任务.....")
-		// MD("mysql.maindb").Select("platform")
-		// app.DIE("执行完成.....", true)
+		Println("\n开始执行 数据库表->模型构造 迁移任务.....")
+		_, err := MD(Replace(migrate, ":", ".", -1)).TM()
+		if err != nil {
+			DIE(err.Error(), true)
+		}
+		DIE("执行完成.....", true)
 	}
 	//
 	defer PHandler()

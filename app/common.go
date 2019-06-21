@@ -17,11 +17,11 @@ import (
 )
 
 type (
-	Float float64
+	Float  float64
 	String string
-	Int int64
-	Bool bool
-	T reflect.Value
+	Int    int64
+	Bool   bool
+	T      reflect.Value
 )
 
 // 运行时相关 //////////////////////////////////////////////////////////////////
@@ -162,6 +162,20 @@ func (s String) Scan(suffix string, isDir bool) []string {
 		return make([]string, 0)
 	}
 	return files
+}
+
+// 写文件
+func (s String) Write(content string) (bool, error) {
+	f, err := os.OpenFile(s.ToString(), os.O_RDWR|os.O_CREATE, 0766)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+	_, err = f.WriteString(content)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // 整数转字符串
