@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/grsmv/inflect"
+	. "github.com/grsmv/inflect"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -19,6 +20,8 @@ type Model struct {
 }
 
 var dbs map[string]map[string]*sql.DB
+
+var Tables map[string]reflect.Value
 
 func init() {
 	t, err := String("database").C()
@@ -61,7 +64,7 @@ func init() {
 		}
 		cs := cfg["username"] + ":" + cfg["password"] + "@tcp(" + cfg["host"] + ":" + cfg["port"] + ")/" + cfg["database"] + "?charset=" + cfg["charset"] + "&parseTime=" + cfg["parsetime"] + "&loc=" + cfg["loc"]
 		if IsDeveloper {
-			fmt.Println("连接数据库Mysql[" + key + "]：" + cs)
+			Dump("yellow", "连接数据库Mysql["+key+"]："+cs)
 		}
 		db, err := sql.Open("mysql", cs)
 		if err != nil {
@@ -85,10 +88,12 @@ func init() {
 			DIE("数据库Sqlite[" + key + "]Ping失败" + err.Error())
 		}
 		if IsDeveloper {
-			fmt.Println("连接数据库SQLite[" + key + "]：" + file)
+			Dump("yellow", "连接数据库SQLite["+key+"]："+file)
 		}
 		dbs["sqlite"][key] = db
 	}
+	// 表初始化
+	Tables = make(map[string]reflect.Value)
 }
 
 // 获取数据库连接
@@ -133,22 +138,14 @@ func (m *Model) HasTable(table string) (bool, error) {
 	return false, errors.New("表不存在")
 }
 
-type sds struct {
-	Id        int    `N:"id" X:"width=11,primary,unsigned,not_null,auto_increment"`
-	UserName  string `N:"username" X:"length=5,not_null,unique"`
-	Password  string `N:"password" X:"length=5,not_null"`
-	CreatedAt string `N:"created_at" X:"timestamp,default=current_timestamp"`
-	UpdatedAt string `N:"updated_at" X:"timestamp,default=current_timestamp,on_update_current_timestamp"`
-	Status    int    `N:"status" X:"width=1,default=1"`
-}
-
 // 生成模型构造
 func (m *Model) TS(mn string, fs map[string]map[string]string) string {
 	str := "type " + String(mn).UFrist() + " struct {\n"
 	items, lfs := make([]string, 0), ""
+	ID, CT, UT, DT := "", "", "", ""
 	for f, fd := range fs {
 		item := "%s@%s `N:\"%s\" X:\"%s\"`"
-		a, b, c, d := String(inflect.CamelizeDownFirst(f)).UFrist(), "string", f, make([]string, 0)
+		a, b, c, d := String(CamelizeDownFirst(f)).UFrist(), "string", f, make([]string, 0)
 		if len(lfs) < len(a) {
 			lfs = a
 		}
@@ -160,6 +157,8 @@ func (m *Model) TS(mn string, fs map[string]map[string]string) string {
 			b = "float"
 			x := String(strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1)).Split(",")
 			d = append(d, "width="+x[0], "prec="+x[1])
+		} else if strings.HasPrefix(ft[0], "VARCHAR") {
+			d = append(d, "length="+strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1))
 		} else if ft[0] == "TIMESTAMP" {
 			d = append(d, "timestamp")
 		}
@@ -199,10 +198,48 @@ func (m *Model) TS(mn string, fs map[string]map[string]string) string {
 		} else if fd["extra"] == "ON UPDATE CURRENT_TIMESTAMP" {
 			d = append(d, "on_update_current_timestamp")
 		}
-		items = append(items, fmt.Sprintf(item, a, b, c, strings.Join(d, ","))+"\n")
+		sort.Reverse(sort.StringSlice(d))
+		item = fmt.Sprintf(item, a, b, c, strings.Join(d, ",")) + "\n"
+		if a == "Id" {
+			ID = item
+		} else if a == "CreatedAt" {
+			CT = item
+		} else if a == "UpdatedAt" {
+			UT = item
+		} else if a == "DeletedAt" {
+			DT = item
+		} else {
+			items = append(items, item)
+		}
+	}
+	CUD := make([]string, 0)
+	if CT != "" {
+		CUD = append(CUD, CT)
+	}
+	if UT != "" {
+		CUD = append(CUD, UT)
+	}
+	if DT != "" {
+		CUD = append(CUD, DT)
 	}
 	sort.Sort(sort.StringSlice(items))
+	if ID != "" {
+		tmp := String(ID).Split("@")
+		f, length, max := tmp[0], len(tmp[0]), len(lfs)
+		for i := 0; i < (max-length)+1; i++ {
+			f += " "
+		}
+		str += "    " + f + tmp[1]
+	}
 	for _, v := range items {
+		tmp := String(v).Split("@")
+		f, length, max := tmp[0], len(tmp[0]), len(lfs)
+		for i := 0; i < (max-length)+1; i++ {
+			f += " "
+		}
+		str += "    " + f + tmp[1]
+	}
+	for _, v := range CUD {
 		tmp := String(v).Split("@")
 		f, length, max := tmp[0], len(tmp[0]), len(lfs)
 		for i := 0; i < (max-length)+1; i++ {
@@ -274,27 +311,34 @@ func (m *Model) TM() (bool, error) {
 	if len(tables) < 1 {
 		return false, errors.New("表数据解析失败.....")
 	}
-	fds := make(map[string][]string)
+	fds, mapper := make(map[string][]string), make(map[string][]string)
 	for tb, fs := range tables {
-		f := strings.ToLower(inflect.Pluralize(tb))
+		f := strings.ToLower(Pluralize(tb))
 		ws := String(tb).Split("_")
 		if len(ws) > 1 {
-			f = strings.ToLower(inflect.Pluralize(ws[0]))
+			f = strings.ToLower(Pluralize(ws[0]))
 		}
 		if _, ok := fds[f]; !ok {
 			fds[f] = make([]string, 0)
+			mapper[f] = make([]string, 0)
 		}
-		mn := inflect.CamelizeDownFirst(tb)
+		mn := CamelizeDownFirst(tb)
+		mapper[f] = append(mapper[f], mn)
 		fds[f] = append(fds[f], m.TS(mn, fs))
 	}
 	for file, ctx := range fds {
+		function := "func init() {\n"
+		for _, fm := range mapper[file] {
+			function += "	app.Tables[\"" + Underscore(fm) + "\"] = app.RV(" + String(fm).UFrist() + "{})\n"
+		}
+		function += "}\n\n"
 		file = file + ".go"
 		if String("model").IsExist(file) {
 			if err := os.Remove("model/" + file); err != nil {
 				return false, err
 			}
 		}
-		_, err := String("model/" + file).Write("package model\n\n" + strings.Join(ctx, "\n\n"))
+		_, err := String("model/" + file).Write("package model\n\nimport \"alopex/app\"\n\n" + function + strings.Join(ctx, "\n\n"))
 		if err != nil {
 			return false, err
 		}

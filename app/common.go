@@ -17,21 +17,51 @@ import (
 )
 
 type (
-	Float  float64
+	Float float64
 	String string
-	Int    int64
-	Bool   bool
-	T      reflect.Value
+	Int int64
+	Bool bool
+	T reflect.Value
 )
 
 // 运行时相关 //////////////////////////////////////////////////////////////////
+// 格式化命令行显示
+func Dump(args ...string) {
+	length := len(args)
+	if length == 0 {
+		fmt.Println()
+	}
+	if length == 1 {
+		fmt.Println(args[0])
+	}
+	if length == 2 {
+		if runtime.GOOS != "windows" {
+			code := 30
+			switch args[0] {
+			case "red":
+				code = 31
+			case "green":
+				code = 32
+			case "yellow":
+				code = 33
+			case "blue":
+				code = 34
+			case "white":
+				code = 37
+			}
+			args[1] = fmt.Sprintf("\x1b[0;%dm%s\x1b[0m", code, args[1])
+		}
+		fmt.Println(args[1])
+	}
+}
+
 // 打印空行
 func ELine(num int) {
 	if num < 1 {
 		num = 1
 	}
 	for i := 0; i < num; i++ {
-		fmt.Println()
+		Dump()
 	}
 }
 
@@ -65,13 +95,14 @@ func PHandler() {
 				}
 			}
 		}
-		fmt.Println("\n" + title)
+		Dump()
+		Dump("red", title)
 		if len(stack) > 0 {
-			fmt.Println("----------------------------------------------")
+			Dump("----------------------------------------------")
 			for _, v := range stack {
-				fmt.Println("》> " + v)
+				Dump("green", "》> "+v)
 			}
-			fmt.Println()
+			Dump()
 		}
 	}
 }
@@ -79,9 +110,9 @@ func PHandler() {
 // 终结运行
 func DIE(message string, args ...bool) {
 	if !((len(args) > 0) && args[0]) {
-		message = "[ERROR] " + message
+		Dump("red", "[ERROR]"+message)
 	}
-	fmt.Println(message)
+	Dump(message)
 	os.Exit(1)
 }
 

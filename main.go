@@ -11,7 +11,8 @@ import (
 )
 
 func main() {
-	migrate := *flag.String("migrate", "mysql:games_db.qp", "迁移数据库表数据为模型构造，请填写[数据库类型（mysql/sqlite）:数据库名字]，如：mysql:ckgame")
+
+	migrate := *flag.String("migrate", "mysql:games_db.qp", "迁移数据库表数据为模型构造，请填写[数据库类型（mysql/sqlite）:数据库名字]，如：mysql:games_db.qp")
 	flag.Parse()
 	if !TT(migrate).IsEmpty() {
 		Println("\n开始执行 数据库表->模型构造 迁移任务.....")
