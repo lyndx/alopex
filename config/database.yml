@@ -1,30 +1,24 @@
 ###################
 ### 数据库配置 ###
 ###################
-# Mysql配置
-mysql:
-  main_db:
-    host: 127.0.0.1
-    port: 3306
-    username: allSysPlatDb
-    password: allSysPlatDb
-    database: maindb
-    charset: utf8
-    parseTime: true
-    loc: Local
-  games_db:
-    qp:
-      host: 127.0.0.1
-      port: 3306
-      username: root
-      password: root
-      database: ckgame
-      charset: utf8
-      parseTime: true
-      loc: Local
-# SQLite配置
-sqlite:
-#  a: data/app.db
+main:
+  host: 127.0.0.1
+  port: 3306
+  username: alopex
+  password: alopex
+  database: alopex
+  charset: utf8
+  parseTime: true
+  loc: Local
+platform_qp:
+  host: 127.0.0.1
+  port: 3306
+  username: qp
+  password: qp
+  database: qp
+  charset: utf8
+  parseTime: true
+  loc: Local
 
 
 

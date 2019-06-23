@@ -262,12 +262,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PA[k] = fitems
 				} else if k == "content-type" {
@@ -281,12 +281,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 			vv := TT(v, true)
 			if vv.IsFile(false) {
 				f := v.(*multipart.FileHeader)
-				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 			} else if vv.IsFile(true) {
 				fs := v.([]*multipart.FileHeader)
 				fitems := make([]map[string]interface{}, 0)
 				for _, f := range fs {
-					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 				}
 				PB[k] = fitems
 			} else if k == "content-type" {

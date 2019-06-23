@@ -1,31 +1,36 @@
 package main
 
 import (
+	"errors"
 	"flag"
-	. "fmt"
 	. "net/http"
-	. "strings"
 
 	. "alopex/app"
 	_ "alopex/controller/backend"
+	_ "alopex/model"
 )
 
 func main() {
-
-	migrate := *flag.String("migrate", "mysql:games_db.qp", "迁移数据库表数据为模型构造，请填写[数据库类型（mysql/sqlite）:数据库名字]，如：mysql:games_db.qp")
+	D := flag.String("d", "", "操作的数据库名字")
+	T := flag.String("t", "", "迁移方式：m2t->数据模型构造为数据表；t2m->数据表为数据模型构造")
 	flag.Parse()
-	if !TT(migrate).IsEmpty() {
-		Println("\n开始执行 数据库表->模型构造 迁移任务.....")
-		_, err := MD(Replace(migrate, ":", ".", -1)).TM()
+	d, t := *D, *T
+	if (d != "") && (t != "") {
+		Dump("green", "开始执行 迁移任务.....")
+		D := MD(d)
+		err := errors.New("操作失败")
+		if t == "m2t" {
+			_, err = D.MT()
+		} else if t == "t2m" {
+			_, err = D.TM()
+		}
 		if err != nil {
-			DIE(err.Error(), true)
+			DIE(err.Error())
 		}
 		DIE("执行完成.....", true)
 	}
 	//
 	defer PHandler()
-	//
-	ELine(1)
 	// 加载后端服务
 	IsBackendService, _ := String("app").C("is_backend_service")
 	if IsBackendService.IsValid() && IsBackendService.IsBool() && TValue(IsBackendService).(bool) {

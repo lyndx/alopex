@@ -17,16 +17,16 @@ import (
 )
 
 type (
-	Float float64
+	Float  float64
 	String string
-	Int int64
-	Bool bool
-	T reflect.Value
+	Int    int64
+	Bool   bool
+	T      reflect.Value
 )
 
 // 运行时相关 //////////////////////////////////////////////////////////////////
 // 格式化命令行显示
-func Dump(args ...string) {
+func Dump(args ...interface{}) {
 	length := len(args)
 	if length == 0 {
 		fmt.Println()
@@ -110,9 +110,10 @@ func PHandler() {
 // 终结运行
 func DIE(message string, args ...bool) {
 	if !((len(args) > 0) && args[0]) {
-		Dump("red", "[ERROR]"+message)
+		Dump("red", message)
+	} else {
+		Dump(message)
 	}
-	Dump(message)
 	os.Exit(1)
 }
 

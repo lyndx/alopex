@@ -11,6 +11,6 @@ func init() {
 }
 
 func (ctrl AuthController) Login(h *app.Http) {
-	a, _ := app.MD("mysql.games_db.qp").Select("users")
+	a, _ := app.MD("main").Select("users u left join user_details d on u.id=d.user_id", "u.*,d.balance,d.brief", "u.id <23")
 	h.Output(200, a)
 }

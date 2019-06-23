@@ -9,8 +9,9 @@ import (
 )
 
 var (
-	config     *T
-	configOnce sync.Once
+	config      *T
+	IsDeveloper bool
+	configOnce  sync.Once
 )
 
 // 加载配置
@@ -34,6 +35,12 @@ func (s String) C(args ...string) (T, error) {
 		}
 		tmp := TT(TT(result).ToMS(), true)
 		config = &tmp
+		//
+		IsDeveloper = false
+		x := TT(config.GValue("app.is_developer", false))
+		if x.IsValid() && x.IsBool() && TValue(x, true).(bool) {
+			IsDeveloper = true
+		}
 	})
 	path := s.ToString()
 	if path == "" {

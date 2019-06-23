@@ -12,88 +12,63 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	. "github.com/grsmv/inflect"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type Model struct {
-	db *sql.DB
+	dbname string
+	db     *sql.DB
 }
 
-var dbs map[string]map[string]*sql.DB
+var dbs map[string]*sql.DB
 
-var Tables map[string]reflect.Value
+var Tables map[string]reflect.Type
 
 func init() {
+	Dump()
 	t, err := String("database").C()
 	if err != nil {
 		DIE("数据库初始化失败")
 	}
-	dbs = map[string]map[string]*sql.DB{"mysql": {}, "sqlite": {}}
-	MySQL, SQLite := map[string]map[string]string{}, map[string]string{}
+	dbs = make(map[string]*sql.DB, 0)
+	configs := make(map[string]map[string]string)
 	for k, v := range TValue(t).(map[string]interface{}) {
 		kk := String(k).Split(".")
-		if len(kk) > 1 {
-			switch kk[0] {
-			case "mysql":
-				key, field := strings.Join(kk[1:len(kk)-1], "."), kk[len(kk)-1]
-				if _, ok := MySQL[key]; !ok {
-					MySQL[key] = make(map[string]string)
-				}
-				vv := TT(v)
-				if vv.IsValid() {
-					MySQL[key][field] = vv.ToString()
-				}
-			case "sqlite":
-				key, vv := kk[1], TT(v)
-				if vv.IsValid() {
-					SQLite[key] = vv.ToString()
-				}
-			}
+		if len(kk) != 2 {
+			DIE("数据库配置错误")
 		}
+		vv := TT(v)
+		if !vv.IsValid() {
+			DIE("数据库配置错误")
+		}
+		key, item := strings.ToLower(kk[0]), strings.ToLower(kk[1])
+		if _, ok := configs[key]; !ok {
+			configs[key] = make(map[string]string)
+		}
+		configs[key][item] = vv.ToString()
 	}
-	// 是否为开发模式
-	IsDeveloper := true
-	tmp, err := String("app").C("is_developer")
-	if (err == nil) && tmp.IsBool() && !TValue(tmp, true).(bool) {
-		IsDeveloper = false
-	}
-	// Mysql初始化
-	for key, cfg := range MySQL {
+	// 初始化
+	for key, cfg := range configs {
 		if TT(cfg["host"]).IsEmpty() || TT(cfg["port"]).IsEmpty() || TT(cfg["username"]).IsEmpty() || TT(cfg["password"]).IsEmpty() || TT(cfg["database"]).IsEmpty() || TT(cfg["charset"]).IsEmpty() || TT(cfg["parsetime"]).IsEmpty() || TT(cfg["loc"]).IsEmpty() {
 			DIE("数据库Mysql[" + key + "]配置项不完整")
 		}
 		cs := cfg["username"] + ":" + cfg["password"] + "@tcp(" + cfg["host"] + ":" + cfg["port"] + ")/" + cfg["database"] + "?charset=" + cfg["charset"] + "&parseTime=" + cfg["parsetime"] + "&loc=" + cfg["loc"]
 		if IsDeveloper {
-			Dump("yellow", "连接数据库Mysql["+key+"]："+cs)
+			Dump("yellow", "连接数据库["+key+"]："+cs)
 		}
 		db, err := sql.Open("mysql", cs)
 		if err != nil {
-			DIE("数据库Mysql[" + key + "]连接失败，" + err.Error())
+			DIE("数据库[" + key + "]连接失败，" + err.Error())
 		}
 		if err = db.Ping(); err != nil {
-			DIE("数据库Mysql[" + key + "]Ping失败" + err.Error())
+			DIE("数据库[" + key + "]Ping失败" + err.Error())
 		}
 		db.SetMaxIdleConns(100)
 		db.SetMaxOpenConns(1000)
 		db.SetConnMaxLifetime(100 * time.Second)
-		dbs["mysql"][key] = db
-	}
-	// SQLite初始化
-	for key, file := range SQLite {
-		db, err := sql.Open("sqlite3", file)
-		if err != nil {
-			DIE("数据库Sqlite[" + key + "]连接失败，" + err.Error())
-		}
-		if err = db.Ping(); err != nil {
-			DIE("数据库Sqlite[" + key + "]Ping失败" + err.Error())
-		}
-		if IsDeveloper {
-			Dump("yellow", "连接数据库SQLite["+key+"]："+file)
-		}
-		dbs["sqlite"][key] = db
+		dbs[key] = db
 	}
 	// 表初始化
-	Tables = make(map[string]reflect.Value)
+	Tables = make(map[string]reflect.Type)
 }
 
 // 获取数据库连接
@@ -102,19 +77,11 @@ func MD(key string) *Model {
 	if TT(key).IsEmpty() {
 		return &m
 	}
-	kk := String(key).Split(".")
-	if len(kk) < 2 {
+	key = strings.ToLower(key)
+	if _, ok := dbs[key]; !ok {
 		return &m
 	}
-	dt := strings.ToLower(kk[0])
-	if _, ok := dbs[dt]; !ok {
-		return &m
-	}
-	dd := strings.Join(kk[1:], ".")
-	if _, ok := dbs[dt][dd]; !ok {
-		return &m
-	}
-	m = Model{dbs[dt][dd]}
+	m = Model{key, dbs[key]}
 	return &m
 }
 
@@ -144,23 +111,28 @@ func (m *Model) TS(mn string, fs map[string]map[string]string) string {
 	items, lfs := make([]string, 0), ""
 	ID, CT, UT, DT := "", "", "", ""
 	for f, fd := range fs {
-		item := "%s@%s `N:\"%s\" X:\"%s\"`"
-		a, b, c, d := String(CamelizeDownFirst(f)).UFrist(), "string", f, make([]string, 0)
+		item := "%s@%s `N:\"%s\" X:\"%s\" M:\"%s\"`\n"
+		a, b, c, d, e := String(CamelizeDownFirst(f)).UFrist(), "string", f, make([]string, 0), fd["comment"]
 		if len(lfs) < len(a) {
 			lfs = a
 		}
 		ft := String(fd["type"]).Split(" ")
-		if strings.HasSuffix(ft[0], "INT") {
-			b = "int"
-			d = append(d, "width="+strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1))
-		} else if ft[0] == "DECIMAL" {
-			b = "float"
-			x := String(strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1)).Split(",")
+		ftf := String(ft[0]).Split("(")
+		if strings.HasSuffix(ftf[0], "INT") {
+			b = "int64"
+			d = append(d, "width="+strings.Replace(ftf[1], ")", "", -1))
+		} else if strings.HasPrefix(ftf[0], "DECIMAL") {
+			b = "float64"
+			x := String(strings.Replace(ftf[1], ")", "", -1)).Split(",")
 			d = append(d, "width="+x[0], "prec="+x[1])
-		} else if strings.HasPrefix(ft[0], "VARCHAR") {
-			d = append(d, "length="+strings.Replace(String(ft[0]).Split("(")[1], ")", "", -1))
+		} else if strings.HasPrefix(ftf[0], "VARCHAR") {
+			d = append(d, "length="+strings.Replace(ftf[1], ")", "", -1))
 		} else if ft[0] == "TIMESTAMP" {
 			d = append(d, "timestamp")
+		} else if ft[0] == "TEXT" {
+			d = append(d, "length=-1")
+		} else if ft[0] == "LONGTEXT" {
+			d = append(d, "length=-2")
 		}
 		if len(ft) == 2 {
 			d = append(d, "unsigned")
@@ -198,48 +170,33 @@ func (m *Model) TS(mn string, fs map[string]map[string]string) string {
 		} else if fd["extra"] == "ON UPDATE CURRENT_TIMESTAMP" {
 			d = append(d, "on_update_current_timestamp")
 		}
-		sort.Reverse(sort.StringSlice(d))
-		item = fmt.Sprintf(item, a, b, c, strings.Join(d, ",")) + "\n"
 		if a == "Id" {
-			ID = item
+			ID = fmt.Sprintf(item, "Id", "int64", "id", "width=11,unsigned,not_null,primary,auto_increment", "编号")
 		} else if a == "CreatedAt" {
-			CT = item
+			CT = fmt.Sprintf(item, "CreatedAt", "string", "created_at", "timestamp,default=current_timestamp", "添加时间")
 		} else if a == "UpdatedAt" {
-			UT = item
+			UT = fmt.Sprintf(item, "UpdatedAt", "string", "updated_at", "timestamp,default=current_timestamp,on_update_current_timestamp", "更新时间")
 		} else if a == "DeletedAt" {
-			DT = item
+			DT = fmt.Sprintf(item, "DeletedAt", "string", "deleted_at", "timestamp", "删除时间")
 		} else {
-			items = append(items, item)
+			_ = sort.Reverse(sort.StringSlice(d))
+			items = append(items, fmt.Sprintf(item, a, b, c, strings.Join(d, ","), e))
 		}
-	}
-	CUD := make([]string, 0)
-	if CT != "" {
-		CUD = append(CUD, CT)
-	}
-	if UT != "" {
-		CUD = append(CUD, UT)
-	}
-	if DT != "" {
-		CUD = append(CUD, DT)
 	}
 	sort.Sort(sort.StringSlice(items))
+	if CT != "" {
+		items = append(items, CT)
+	}
+	if UT != "" {
+		items = append(items, UT)
+	}
+	if DT != "" {
+		items = append(items, DT)
+	}
 	if ID != "" {
-		tmp := String(ID).Split("@")
-		f, length, max := tmp[0], len(tmp[0]), len(lfs)
-		for i := 0; i < (max-length)+1; i++ {
-			f += " "
-		}
-		str += "    " + f + tmp[1]
+		items = append([]string{ID}, items...)
 	}
 	for _, v := range items {
-		tmp := String(v).Split("@")
-		f, length, max := tmp[0], len(tmp[0]), len(lfs)
-		for i := 0; i < (max-length)+1; i++ {
-			f += " "
-		}
-		str += "    " + f + tmp[1]
-	}
-	for _, v := range CUD {
 		tmp := String(v).Split("@")
 		f, length, max := tmp[0], len(tmp[0]), len(lfs)
 		for i := 0; i < (max-length)+1; i++ {
@@ -269,7 +226,7 @@ func (m *Model) getTablesDDL() (map[string]map[string]map[string]string, error) 
 		if err := rows.Scan(&tb); err != nil {
 			return nil, err
 		}
-		rs, err := db.Query("DESC " + tb)
+		rs, err := db.Query("SHOW FULL FIELDS FROM " + tb)
 		if err != nil {
 			return nil, err
 		}
@@ -278,8 +235,8 @@ func (m *Model) getTablesDDL() (map[string]map[string]map[string]string, error) 
 		}
 		fs := make(map[string]map[string]string)
 		for rs.Next() {
-			f, t, n, k, d, e := "", "", "", "", sql.NullString{}, ""
-			if err := rs.Scan(&f, &t, &n, &k, &d, &e); err != nil {
+			f, t, co, n, k, d, e, pr, cm := "", "", sql.NullString{}, "", "", sql.NullString{}, "", "", ""
+			if err := rs.Scan(&f, &t, &co, &n, &k, &d, &e, &pr, &cm); err != nil {
 				return nil, err
 			}
 			if f != "" {
@@ -289,12 +246,13 @@ func (m *Model) getTablesDDL() (map[string]map[string]map[string]string, error) 
 					"key":     strings.ToUpper(k),
 					"default": d.String,
 					"extra":   strings.ToUpper(e),
+					"comment": cm,
 				}
 			}
 		}
 		tables[tb] = fs
 	}
-	rows.Close()
+	_ = rows.Close()
 	return tables, nil
 }
 
@@ -309,7 +267,7 @@ func (m *Model) TM() (bool, error) {
 		return false, err
 	}
 	if len(tables) < 1 {
-		return false, errors.New("表数据解析失败.....")
+		return false, errors.New("数据库不能为空.....")
 	}
 	fds, mapper := make(map[string][]string), make(map[string][]string)
 	for tb, fs := range tables {
@@ -329,7 +287,7 @@ func (m *Model) TM() (bool, error) {
 	for file, ctx := range fds {
 		function := "func init() {\n"
 		for _, fm := range mapper[file] {
-			function += "	app.Tables[\"" + Underscore(fm) + "\"] = app.RV(" + String(fm).UFrist() + "{})\n"
+			function += "	app.Tables[\"" + m.dbname + "." + Underscore(fm) + "\"] = app.RT(" + String(fm).UFrist() + "{})\n"
 		}
 		function += "}\n\n"
 		file = file + ".go"
@@ -346,13 +304,221 @@ func (m *Model) TM() (bool, error) {
 	return true, nil
 }
 
+// 反转模型构造为数据表
+func (m *Model) MT() (bool, error) {
+	db := m.db
+	if db == nil {
+		return false, errors.New("数据库连接失败.....")
+	}
+	if len(Tables) < 1 {
+		return false, errors.New("数据表不能为空.....")
+	}
+	ts := make([]string, 0)
+	for t := range Tables {
+		ts = append(ts, t)
+	}
+	// 清空多余的表
+	rows, err := db.Query("SHOW TABLES")
+	if err != nil {
+		return false, err
+	}
+	if err := rows.Err(); err != nil {
+		return false, err
+	}
+	sqls := make([]string, 0)
+	for rows.Next() {
+		tb := ""
+		if err := rows.Scan(&tb); err != nil {
+			return false, err
+		}
+		tb = strings.Replace(tb, m.dbname+".", "", -1)
+		sqls = append(sqls, "DROP TABLE IF EXISTS "+tb)
+	}
+	for _, s := range sqls {
+		Dump("blue", s)
+		_, err := db.Exec(s)
+		if err != nil {
+			return false, errors.New("表删除失败....")
+		}
+	}
+	for tn, tb := range Tables {
+		if !strings.HasPrefix(tn, m.dbname+".") {
+			continue
+		}
+		length, items, keys := tb.NumField(), make([]string, 0), make([]string, 0)
+		if length < 1 {
+			return false, errors.New("表字段不能为空....")
+		}
+		tn = strings.Replace(tn, m.dbname+".", "", -1)
+		for i := 0; i < length; i++ {
+			tbf := tb.Field(i)
+			ft, fgn, fgx, fgm := tbf.Type.String(), tbf.Tag.Get("N"), String(tbf.Tag.Get("X")).Split(","), tbf.Tag.Get("M")
+			item, null, ouc, aic := []string{"`" + fgn + "` ", "", ""}, []string{"", "DEFAULT NULL "}, "", ""
+			if ft == "int64" {
+				item[1] = "INT"
+				item[2] = "11"
+				null[1] = "DEFAULT 0 "
+			} else if ft == "string" {
+				item[1] = "VARCHAR"
+				item[2] = "200"
+				null[1] = "DEFAULT '' "
+			} else if ft == "float64" {
+				item[1] = "DECIMAL"
+				item[2] = "11,2"
+				null[1] = "DEFAULT 0.00 "
+			}
+			for _, v := range fgx {
+				if strings.HasPrefix(v, "width=") || strings.HasPrefix(v, "length=") {
+					vt := String(item[2]).Split(",")
+					vt[0] = String(v).Split("=")[1]
+					if vt[0] == "1" {
+						if ft == "int64" {
+							item[1] = "TINYINT "
+						}
+					}
+					item[2] = strings.Join(vt, ",")
+					if (ft == "string") && strings.HasPrefix(v, "length=") {
+						if vt[0] == "-1" {
+							item[1] = "TEXT "
+						} else if vt[0] == "-2" {
+							item[1] = "LONGTEXT "
+						}
+					}
+				} else if strings.HasPrefix(v, "perc=") {
+					vt := String(item[2]).Split(",")
+					if len(vt) == 1 {
+						vt = append(vt, "")
+					}
+					vt[1] = String(v).Split("=")[1]
+					item[2] = strings.Join(vt, ",")
+				} else if v == "unsigned" {
+					item = append(item, "UNSIGNED ")
+				} else if v == "not_null" {
+					item = append(item, "")
+					null[0] = "NOT NULL "
+				} else if v == "primary" {
+					keys = append(keys, "PRIMARY KEY (`"+fgn+"`)")
+				} else if v == "auto_increment" {
+					aic = "AUTO_INCREMENT "
+				} else if v == "timestamp" {
+					item[1] = "TIMESTAMP "
+					item[2] = ""
+				} else if strings.HasPrefix(v, "default=") {
+					tddef := String(v).Split("=")[1]
+					if tddef == "current_timestamp" {
+						item[1] = "TIMESTAMP "
+						tddef = "CURRENT_TIMESTAMP"
+					}
+					null[1] = "DEFAULT " + tddef + " "
+				} else if v == "on_update_current_timestamp" {
+					item[1] = "TIMESTAMP "
+					ouc = "ON UPDATE CURRENT_TIMESTAMP "
+				} else if v == "unique" {
+					keys = append(keys, "UNIQUE KEY `index_"+fgn+"` (`"+fgn+"`) USING BTREE")
+				}
+			}
+			if (item[2] != "") && (!strings.HasSuffix(item[1], "TEXT ")) {
+				item[1] = item[1] + "(" + item[2] + ") "
+				item[2] = ""
+			}
+			if strings.HasSuffix(item[1], "TEXT ") {
+				item[2] = ""
+				null = []string{"", "DEFAULT NULL "}
+			}
+			if null[0] == "NOT NULL " {
+				null[1] = ""
+			}
+			isn := strings.Join(null, "")
+			if isn != "" {
+				item = append(item, isn)
+			}
+			if ouc != "" {
+				item = append(item, ouc)
+			}
+			if aic != "" {
+				item = append(item, aic)
+			}
+			if fgm != "" {
+				item = append(item, "COMMENT '"+fgm+"'")
+			}
+			if fgn == "deleted_at" {
+				item[3] = "DEFAULT NULL "
+			}
+			items = append(items, strings.Join(item, ""))
+		}
+		fieldsStr := "\n    " + items[0]
+		if len(items) > 1 {
+			fieldsStr = "\n    " + strings.Join(items, ",\n    ")
+		}
+		keysStr := ""
+		if len(keys) > 0 {
+			keysStr = keys[0]
+			if len(keys) > 1 {
+				keysStr = strings.Join(keys, ",\n    ")
+			}
+			keysStr = ",\n    " + keysStr
+		}
+		ddl := "CREATE TABLE `" + tn + "` (" + fieldsStr + keysStr + "\n) ENGINE=INNODB DEFAULT CHARSET=UTF8"
+		if IsDeveloper {
+			Dump("yellow", ddl+"\n")
+		}
+		_, err := db.Exec(ddl)
+		if err != nil {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
 // 查询
-func (m *Model) Select(table string, args ...interface{}) (interface{}, error) {
-	_, err := m.HasTable(table)
+func (m *Model) Select(args ...string) (interface{}, error) {
+	template, from, fields, where := "SELECT %v FROM %v WHERE %v", "", "*", "1=1"
+	if len(args) < 1 {
+		return nil, errors.New("查询表不存在")
+	}
+	from = args[0]
+	if len(args) > 1 {
+		fields = args[1]
+	}
+	if len(args) > 2 {
+		where = args[2]
+	}
+	sqlStr := fmt.Sprintf(template, fields, from, where)
+	if len(args) > 3 {
+		sqlStr += fmt.Sprintf(" GROUP BY %v", args[3])
+	}
+	if len(args) > 4 {
+		sqlStr += fmt.Sprintf(" ORDER BY %v", args[4])
+	}
+	if len(args) > 5 {
+		sqlStr += fmt.Sprintf(" LIMIT %v", args[5])
+	}
+	if IsDeveloper {
+		Dump("yellow", sqlStr)
+	}
+	rows, err := m.db.Query(sqlStr)
 	if err != nil {
 		return nil, err
 	}
-
-	// do more ...
-	return nil, nil
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	cols, _ := rows.Columns()
+	result, clen := make([]map[string]string, 0), len(cols)
+	for rows.Next() {
+		item := make([]interface{}, 0)
+		for i := 0; i < clen; i++ {
+			x := sql.NullString{}
+			item = append(item, &x)
+		}
+		if err := rows.Scan(item...); err != nil {
+			return false, err
+		}
+		row := make(map[string]string)
+		for k, v := range item {
+			row[cols[k]] = v.(*sql.NullString).String
+		}
+		result = append(result, row)
+	}
+	return result, nil
 }
