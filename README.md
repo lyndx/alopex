@@ -7,5 +7,4 @@ Go .....
 * go get -v -x -u github.com/grsmv/inflect
 * go get -v -x -u github.com/silenceper/gowatch
 * go get -v -x -u github.com/go-sql-driver/mysql
-* go get -v -x -u github.com/mattn/go-sqlite3
 
