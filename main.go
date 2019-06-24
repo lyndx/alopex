@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	. "net/http"
 
@@ -18,7 +17,7 @@ func main() {
 	if (d != "") && (t != "") {
 		Dump("green", "开始执行 迁移任务.....")
 		D := MD(d)
-		err := errors.New("操作失败")
+		var err error = nil
 		if t == "m2t" {
 			_, err = D.MT()
 		} else if t == "t2m" {

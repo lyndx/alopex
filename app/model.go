@@ -81,7 +81,11 @@ func MD(key string) *Model {
 	if _, ok := dbs[key]; !ok {
 		return &m
 	}
-	m = Model{key, dbs[key]}
+	dbname,err := String("database").C(key+".database")
+	if err != nil {
+		return &m
+	}
+	m = Model{dbname.ToString(), dbs[key]}
 	return &m
 }
 
@@ -306,7 +310,7 @@ func (m *Model) TM() (bool, error) {
 
 // 反转模型构造为数据表
 func (m *Model) MT() (bool, error) {
-	db := m.db
+	db, dbname := m.db, m.dbname
 	if db == nil {
 		return false, errors.New("数据库连接失败.....")
 	}
@@ -318,20 +322,22 @@ func (m *Model) MT() (bool, error) {
 		ts = append(ts, t)
 	}
 	// 清空多余的表
-	rows, err := db.Query("SHOW TABLES")
+	rows, err := db.Query("SELECT table_name,engine FROM information_schema.tables WHERE table_schema='" + dbname + "'")
 	if err != nil {
 		return false, err
 	}
 	if err := rows.Err(); err != nil {
 		return false, err
 	}
+	emapper := make(map[string]string)
 	sqls := make([]string, 0)
 	for rows.Next() {
-		tb := ""
-		if err := rows.Scan(&tb); err != nil {
+		tb, engine := "", ""
+		if err := rows.Scan(&tb, &engine); err != nil {
 			return false, err
 		}
 		tb = strings.Replace(tb, m.dbname+".", "", -1)
+		emapper[tb] = engine
 		sqls = append(sqls, "DROP TABLE IF EXISTS "+tb)
 	}
 	for _, s := range sqls {
@@ -458,7 +464,11 @@ func (m *Model) MT() (bool, error) {
 			}
 			keysStr = ",\n    " + keysStr
 		}
-		ddl := "CREATE TABLE `" + tn + "` (" + fieldsStr + keysStr + "\n) ENGINE=INNODB DEFAULT CHARSET=UTF8"
+		engine := "INNODB"
+		if _, ok := emapper[tn]; ok {
+			engine = strings.ToUpper(emapper[tn])
+		}
+		ddl := "CREATE TABLE `" + tn + "` (" + fieldsStr + keysStr + "\n) ENGINE=" + engine + " DEFAULT CHARSET=UTF8"
 		if IsDeveloper {
 			Dump("yellow", ddl+"\n")
 		}
@@ -521,4 +531,13 @@ func (m *Model) Select(args ...string) (interface{}, error) {
 		result = append(result, row)
 	}
 	return result, nil
+}
+
+// 数据更新（增删改）
+func (m *Model) Update(args ...string) (bool, error) {
+	//template, from, fields, where := "SELECT %v FROM %v WHERE %v", "", "*", "1=1"
+	//if len(args) < 1 {
+	//	return nil, errors.New("查询表不存在")
+	//}
+	return false, nil
 }

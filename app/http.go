@@ -182,6 +182,13 @@ func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
 	(*h.Params)["__"] = result
 	if !isTrue {
 		h.Output(402, "请求失败", strings.Join(messages, "；"))
+	}else{
+		if needAuth {
+
+		}
+		if withPlatform{
+
+		}
 	}
 }
 
