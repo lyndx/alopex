@@ -2,18 +2,23 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/fwhezfwhez/jwt"
 )
 
 type Http struct {
 	STime  time.Time
 	Rep    http.ResponseWriter
 	Req    *http.Request
+	Module string
 	Params *map[string]interface{}
 }
 
@@ -147,8 +152,59 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 	return TValue(Field), true, ""
 }
 
+// JWT认证
+func (h *Http) JwtAuth(module string) {
+	params := *(*h).Params
+	// 获取认证Token字符串
+	if _, ok := params["token"]; (!ok) || (params["token"] == "") || (RT(params["token"]).String() != "string") {
+		h.Output(401, "认证失败", "认证Token不能为空")
+	}
+	tokenStr := params["token"].(string)
+	// 获取认证随机字符串
+	if _, ok := params["random_str"]; (!ok) || (params["random_str"] == "") || (RT(params["random_str"]).String() != "string") {
+		h.Output(401, "认证失败", "认证随机字符串不能为空")
+	}
+	randomStr := params["random_str"].(string)
+	//
+	token := jwt.GetToken()
+	ainfo, _, _, err := token.Decode(tokenStr)
+	if err != nil {
+		h.Output(401, "认证失败", "认证Token校验失败")
+	}
+	if _, ok := ainfo["random_str"]; (!ok) || (ainfo["random_str"] == "") || (ainfo["random_str"] != randomStr) {
+		h.Output(401, "认证失败", "认证唯一性校验失败")
+	}
+	if _, ok := ainfo["user_id"]; (!ok) || (String(ainfo["user_id"]).ToInt() < Int(1)) {
+		h.Output(401, "认证失败", "认证解析用户数据错误")
+	}
+	userId, handler := ainfo["user_id"], reflect.Value{}
+	var user interface{} = nil
+	if module == "backend" {
+		handler = RV(Services["admin"]).MethodByName("GetAdminById")
+		if !handler.IsValid() {
+			h.Output(401, "认证失败", "认证用户信息获取失败")
+		}
+	} else {
+		handler = RV(Services["admin"]).MethodByName("GetAdminById")
+		if !handler.IsValid() {
+			h.Output(401, "认证失败", "认证用户信息获取失败")
+		}
+	}
+	result := handler.Call([]reflect.Value{RV(userId)})
+	if len(result) != 2 {
+		h.Output(401, "认证失败", "认证用户信息获取失败")
+	}
+	user, e := result[0].Interface(), result[1].Interface()
+	if (e != nil) || (user == nil) {
+		h.Output(401, "认证失败", "认证用户信息获取失败")
+	}
+	if user.(map[string]string)["token"] != tokenStr {
+		h.Output(401, "认证失败", "认证用户Token校验失败")
+	}
+}
+
 // 参数校验
-func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
+func (h *Http) Verify(configs []interface{}, module string, needAuth bool, withPlatform bool) {
 	params := *(*h).Params
 	result, isTrue, messages := make(map[string]interface{}), true, make([]string, 0)
 	for _, item := range configs {
@@ -184,10 +240,12 @@ func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
 		h.Output(402, "请求失败", strings.Join(messages, "；"))
 	} else {
 		if needAuth {
-
+			h.JwtAuth(module)
 		}
 		if withPlatform {
-
+			upath := h.Req.URL.RawPath
+			fmt.Println(upath)
+			//h.CheckPlatform()
 		}
 	}
 }
@@ -269,12 +327,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PA[k] = fitems
 				} else if k == "content-type" {
@@ -288,12 +346,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 			vv := TT(v, true)
 			if vv.IsFile(false) {
 				f := v.(*multipart.FileHeader)
-				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 			} else if vv.IsFile(true) {
 				fs := v.([]*multipart.FileHeader)
 				fitems := make([]map[string]interface{}, 0)
 				for _, f := range fs {
-					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 				}
 				PB[k] = fitems
 			} else if k == "content-type" {
@@ -307,13 +365,8 @@ func (h *Http) Output(code int, args ...interface{}) {
 			"needed": PB,
 		}
 	}
-	bs, _ := json.Marshal(result)
 	h.Rep.WriteHeader(200)
-	h.Rep.Header().Set("token", "")
-	if token, ok := (*h.params())["token"]; ok && (token != "") {
-		h.Rep.Header().Set("token", token.(string))
-	}
-	// 可以考虑GZIP传输
+	bs, _ := json.Marshal(result)
 	h.Rep.Write(bs)
 	h.Rep = nil
 }

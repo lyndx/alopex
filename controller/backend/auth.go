@@ -1,9 +1,8 @@
 package backend
 
 import (
-	"fmt"
-
 	"alopex/app"
+	"alopex/service"
 )
 
 type AuthController struct{}
@@ -13,8 +12,17 @@ func init() {
 }
 
 func (ctrl AuthController) Login(h *app.Http) {
-	a, _ := app.MD("main").Select("users u left join user_details d on u.id=d.user_id", true, "u.*,d.balance,d.brief", "u.id <23")
-	b, c, e := app.MD("main").Change("add", "users(username,password,nickname)", "'sdfsd','sdfsd','sdfsdf'")
-	fmt.Println(b, c, e)
-	h.Output(200, a)
+	us := service.UserService{}
+	user, err := us.GetUserByUsername("x")
+	if err != nil {
+		h.Output(402, "用户信息获取失败")
+	}
+	as := service.AuthService{}
+	tokenStr, randomStr, err := as.GetToken(h.Module, "1")
+	if err != nil {
+		h.Output(402, "登录失败")
+	}
+	h.Rep.Header().Set("token", tokenStr)
+	h.Rep.Header().Set("random_str", randomStr)
+	h.Output(200, user)
 }

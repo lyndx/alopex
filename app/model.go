@@ -22,6 +22,7 @@ type Model struct {
 var dbs map[string]*sql.DB
 
 var Tables map[string]reflect.Type
+var Services map[string]interface{}
 
 func init() {
 	Dump()
@@ -67,8 +68,9 @@ func init() {
 		db.SetConnMaxLifetime(100 * time.Second)
 		dbs[key] = db
 	}
-	// 表初始化
+	//
 	Tables = make(map[string]reflect.Type)
+	Services = make(map[string]interface{})
 }
 
 // 获取数据库连接
@@ -486,20 +488,20 @@ func (m *Model) Select(source string, justOne bool, args ...string) (interface{}
 		return nil, errors.New("查询源不能为空")
 	}
 	template, fields, where := "SELECT %v FROM "+source+" WHERE %v", "*", "1=1"
-	if len(args) > 0 {
+	if (len(args) > 0) && (args[0] != "") {
 		fields = args[0]
 	}
-	if len(args) > 1 {
+	if (len(args) > 1) && (args[1] != "") {
 		where = args[1]
 	}
 	sqlStr := fmt.Sprintf(template, fields, where)
-	if len(args) > 2 {
+	if (len(args) > 2) && (args[2] != "") {
 		sqlStr += fmt.Sprintf(" GROUP BY %v", args[2])
 	}
-	if len(args) > 3 {
+	if (len(args) > 3) && (args[3] != "") {
 		sqlStr += fmt.Sprintf(" ORDER BY %v", args[3])
 	}
-	if len(args) > 4 {
+	if (len(args) > 4) && (args[4] != "") {
 		sqlStr += fmt.Sprintf(" LIMIT %v", args[4])
 	}
 	if IsDeveloper {

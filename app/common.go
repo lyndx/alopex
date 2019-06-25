@@ -1,9 +1,13 @@
 package app
 
 import (
+	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -208,6 +212,16 @@ func (s String) Write(content string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// 唯一字符串
+func (s String) GUID() string{
+	b := make([]byte, 48)
+	_, err := io.ReadFull(rand.Reader, b)
+	if err != nil{
+		return ""
+	}
+	return fmt.Sprintf("%x", md5.Sum([]byte(base64.URLEncoding.EncodeToString(b))))
 }
 
 // 整数转字符串

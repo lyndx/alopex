@@ -6,7 +6,7 @@ list:
 
   # 登录
   - route: auth/login
-    need_auth: false
+    need_auth: true
     with_platform: true
     method: post
     handler: auth.login

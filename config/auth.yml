@@ -3,6 +3,7 @@
 ###################
 # Token盐值
 salt: F!#$@DSJF(W$
-# 前端Token有效期,单位:分钟
-frontend_token_expires: 10
-# 后端Token有效期，单位:分钟
+# 移动端Token有效期,单位:分钟
+mobile_token_expires: 10
+# 管理端Token有效期，单位:分钟
+backend_token_expires: 10

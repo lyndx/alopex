@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/spf13/viper"
+	//"github.com/valyala/fasthttp"
 )
 
 var (
@@ -65,14 +66,33 @@ func (s String) RH() {
 					params := route["params"].([]interface{})
 					needAuth := route["need_auth"].(bool)
 					withPlatform := route["with_platform"].(bool)
+					if withPlatform{
+						//route = "/"
+					}
 					handler := route["handler"].(string)
 					//
+
+					//m := func(ctx *fasthttp.RequestCtx) {
+					//	switch string(ctx.Path()) {
+					//	case "/foo":
+					//		fooHandlerFunc(ctx)
+					//	case "/bar":
+					//		barHandlerFunc(ctx)
+					//	case "/baz":
+					//		bazHandler.HandlerFunc(ctx)
+					//	default:
+					//		ctx.Error("not found", fasthttp.StatusNotFound)
+					//	}
+					//}
+					//fasthttp.ListenAndServe(":80", m)
+
 					http.HandleFunc("/"+module+"/"+route["route"].(string), func(rep http.ResponseWriter, req *http.Request) {
 						defer PHandler()
 						// 初始访问
 						h := NT(rep, req)
+						h.Module = module
 						// 参数校验
-						h.Verify(params, needAuth, withPlatform)
+						h.Verify(params, module, needAuth, withPlatform)
 						// 业务实现
 						h.RHH(String(req.URL.Path).Split("/")[1], handler)
 					})
