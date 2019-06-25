@@ -68,7 +68,6 @@ func ELine(num int) {
 // 异常消息
 func PHandler() {
 	if err := recover(); err != nil {
-		fmt.Println(err)
 		_, filename, _, _ := runtime.Caller(0)
 		RPath, PID, TIME := path.Dir(path.Dir(filename)), strconv.Itoa(os.Getpid()), time.Now().Format("2006/01/02 15:04:05")
 		EMsg := fmt.Sprintf("%v", err)

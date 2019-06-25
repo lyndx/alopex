@@ -182,11 +182,11 @@ func (h *Http) Verify(configs []interface{}, needAuth bool, withPlatform bool) {
 	(*h.Params)["__"] = result
 	if !isTrue {
 		h.Output(402, "请求失败", strings.Join(messages, "；"))
-	}else{
+	} else {
 		if needAuth {
 
 		}
-		if withPlatform{
+		if withPlatform {
 
 		}
 	}
@@ -235,7 +235,7 @@ func (h *Http) Output(code int, args ...interface{}) {
 		panic("EOF")
 	}()
 	if h.Rep == nil {
-		panic("EOF")
+		return
 	}
 	result := make(map[String]interface{})
 	result["code"] = code

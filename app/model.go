@@ -81,7 +81,7 @@ func MD(key string) *Model {
 	if _, ok := dbs[key]; !ok {
 		return &m
 	}
-	dbname,err := String("database").C(key+".database")
+	dbname, err := String("database").C(key + ".database")
 	if err != nil {
 		return &m
 	}
@@ -480,33 +480,37 @@ func (m *Model) MT() (bool, error) {
 	return true, nil
 }
 
-// 查询
-func (m *Model) Select(args ...string) (interface{}, error) {
-	template, from, fields, where := "SELECT %v FROM %v WHERE %v", "", "*", "1=1"
-	if len(args) < 1 {
-		return nil, errors.New("查询表不存在")
+// 查询 返回
+func (m *Model) Select(source string, justOne bool, args ...string) (interface{}, error) {
+	if source == "" {
+		return nil, errors.New("查询源不能为空")
 	}
-	from = args[0]
+	template, fields, where := "SELECT %v FROM "+source+" WHERE %v", "*", "1=1"
+	if len(args) > 0 {
+		fields = args[0]
+	}
 	if len(args) > 1 {
-		fields = args[1]
+		where = args[1]
 	}
+	sqlStr := fmt.Sprintf(template, fields, where)
 	if len(args) > 2 {
-		where = args[2]
+		sqlStr += fmt.Sprintf(" GROUP BY %v", args[2])
 	}
-	sqlStr := fmt.Sprintf(template, fields, from, where)
 	if len(args) > 3 {
-		sqlStr += fmt.Sprintf(" GROUP BY %v", args[3])
+		sqlStr += fmt.Sprintf(" ORDER BY %v", args[3])
 	}
 	if len(args) > 4 {
-		sqlStr += fmt.Sprintf(" ORDER BY %v", args[4])
-	}
-	if len(args) > 5 {
-		sqlStr += fmt.Sprintf(" LIMIT %v", args[5])
+		sqlStr += fmt.Sprintf(" LIMIT %v", args[4])
 	}
 	if IsDeveloper {
 		Dump("yellow", sqlStr)
 	}
 	rows, err := m.db.Query(sqlStr)
+	defer func() {
+		if rows != nil {
+			rows.Close()
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -530,14 +534,60 @@ func (m *Model) Select(args ...string) (interface{}, error) {
 		}
 		result = append(result, row)
 	}
+	if justOne {
+		if len(result) > 0 {
+			return result[0], nil
+		}
+		return nil, nil
+	}
 	return result, nil
 }
 
-// 数据更新（增删改）
-func (m *Model) Update(args ...string) (bool, error) {
-	//template, from, fields, where := "SELECT %v FROM %v WHERE %v", "", "*", "1=1"
-	//if len(args) < 1 {
-	//	return nil, errors.New("查询表不存在")
-	//}
-	return false, nil
+// 数据更新（增删改），返回（操作影响的记录数（如果是单条插入，返回对应插入的ID） & 执行成功与否 & 错误消息）
+func (m *Model) Change(operate string, source string, args ...string) (int, bool, error) {
+	if (operate == "") || (source == "") {
+		return 0, false, errors.New("参数错误")
+	}
+	sqlStr := ""
+	switch operate {
+	case "add":
+		if len(args) < 1 {
+			return 0, false, errors.New("插入数据不能为空")
+		}
+		sqlStr = "INSERT INTO " + source + " VALUES (" + strings.Join(args, "),(") + ")"
+	case "edit":
+		if len(args) < 1 {
+			return 0, false, errors.New("插入数据不能为空")
+		}
+		set, where := args[0], ""
+		if len(args) > 1 {
+			where = " WHERE " + args[1]
+		}
+		sqlStr = "UPDATE " + source + " SET " + set + where
+	case "remove":
+		where := ""
+		if len(args) > 0 {
+			where = " WHERE " + args[0]
+		}
+		sqlStr = "DELETE FROM " + source + where
+	}
+	if sqlStr == "" {
+		return 0, false, errors.New("操作不允许")
+	}
+	result, err := m.db.Exec(sqlStr)
+	if err != nil {
+		return 0, false, err
+	}
+	if (operate == "add") && (len(args) == 1) {
+		id, err := result.LastInsertId()
+		if (err != nil) || (id < 1) {
+			return 0, false, err
+		}
+		return int(id), true, nil
+	}
+	num, err := result.RowsAffected()
+	if (err != nil) || (num < 1) {
+		return 0, false, err
+	}
+	return int(num), true, nil
 }

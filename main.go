@@ -39,5 +39,4 @@ func main() {
 	if err := ListenAndServe(":81", nil); err != nil {
 		DIE("服务启动异常，" + err.Error())
 	}
-
 }
