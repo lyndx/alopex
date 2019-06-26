@@ -32,11 +32,11 @@ func main() {
 	defer PHandler()
 	// 加载后端服务
 	IsBackendService, _ := String("app").C("is_backend_service")
-	if IsBackendService.IsValid() && IsBackendService.IsBool() && TValue(IsBackendService).(bool) {
+	if IsBackendService.IsValid() && IsBackendService.IsBool() && TValue(IsBackendService, true).(bool) {
 		String("backend").RH()
 	}
 	// 监听服务端口
-	if err := ListenAndServe(":81", nil); err != nil {
+	if err := ListenAndServe(":81", Mux); err != nil {
 		DIE("服务启动异常，" + err.Error())
 	}
 }

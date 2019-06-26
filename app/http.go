@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
@@ -20,6 +19,7 @@ type Http struct {
 	Req    *http.Request
 	Module string
 	Params *map[string]interface{}
+	Sqls   []string
 }
 
 // 创建Http实例
@@ -45,6 +45,7 @@ func NT(rep http.ResponseWriter, req *http.Request) *Http {
 	h.Req = req
 	h.STime = time.Now()
 	h.Params = h.params()
+	h.Sqls = make([]string, 0)
 	return h
 }
 
@@ -204,7 +205,7 @@ func (h *Http) JwtAuth(module string) {
 }
 
 // 参数校验
-func (h *Http) Verify(configs []interface{}, module string, needAuth bool, withPlatform bool) {
+func (h *Http) Verify(configs []interface{}, module string, needAuth bool) {
 	params := *(*h).Params
 	result, isTrue, messages := make(map[string]interface{}), true, make([]string, 0)
 	for _, item := range configs {
@@ -238,15 +239,8 @@ func (h *Http) Verify(configs []interface{}, module string, needAuth bool, withP
 	(*h.Params)["__"] = result
 	if !isTrue {
 		h.Output(402, "请求失败", strings.Join(messages, "；"))
-	} else {
-		if needAuth {
-			h.JwtAuth(module)
-		}
-		if withPlatform {
-			upath := h.Req.URL.RawPath
-			fmt.Println(upath)
-			//h.CheckPlatform()
-		}
+	} else if needAuth {
+		h.JwtAuth(module)
 	}
 }
 
@@ -320,7 +314,7 @@ func (h *Http) Output(code int, args ...interface{}) {
 		}
 	}
 	result["duration"] = time.Since(h.STime).String()
-	if t, _ := String("app").C("is_developer"); t.IsValid() && t.IsBool() && TValue(t).(bool) {
+	if IsDeveloper {
 		PA, PB := make(map[string]interface{}), make(map[string]interface{})
 		for k, v := range *h.Params {
 			if k != "__" {
@@ -342,28 +336,31 @@ func (h *Http) Output(code int, args ...interface{}) {
 				}
 			}
 		}
-		for k, v := range (*h.Params)["__"].(map[string]interface{}) {
-			vv := TT(v, true)
-			if vv.IsFile(false) {
-				f := v.(*multipart.FileHeader)
-				PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
-			} else if vv.IsFile(true) {
-				fs := v.([]*multipart.FileHeader)
-				fitems := make([]map[string]interface{}, 0)
-				for _, f := range fs {
-					fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+		if _, ok := (*h.Params)["__"]; ok {
+			for k, v := range (*h.Params)["__"].(map[string]interface{}) {
+				vv := TT(v, true)
+				if vv.IsFile(false) {
+					f := v.(*multipart.FileHeader)
+					PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+				} else if vv.IsFile(true) {
+					fs := v.([]*multipart.FileHeader)
+					fitems := make([]map[string]interface{}, 0)
+					for _, f := range fs {
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+					}
+					PB[k] = fitems
+				} else if k == "content-type" {
+					PB[k] = String(v.(string)).Split(";")[0]
+				} else {
+					PB[k] = v
 				}
-				PB[k] = fitems
-			} else if k == "content-type" {
-				PB[k] = String(v.(string)).Split(";")[0]
-			} else {
-				PB[k] = v
 			}
 		}
 		result["request"] = map[string]interface{}{
 			"params": PA,
 			"needed": PB,
 		}
+		result["sql"] = h.Sqls
 	}
 	h.Rep.WriteHeader(200)
 	bs, _ := json.Marshal(result)
