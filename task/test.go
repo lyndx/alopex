@@ -1,8 +1,9 @@
 package task
 
 import (
-	"alopex/app"
 	"fmt"
+
+	"alopex/app"
 )
 
 type TestTask struct{}
