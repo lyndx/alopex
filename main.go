@@ -7,6 +7,7 @@ import (
 	. "alopex/app"
 	_ "alopex/controller/backend"
 	_ "alopex/model"
+	_ "alopex/task"
 )
 
 func main() {
@@ -30,6 +31,8 @@ func main() {
 	}
 	//
 	defer PHandler()
+	// 假造定时任务
+	InitTask()
 	// 加载后端服务
 	IsBackendService, _ := String("app").C("is_backend_service")
 	if IsBackendService.IsValid() && IsBackendService.IsBool() && TValue(IsBackendService, true).(bool) {
