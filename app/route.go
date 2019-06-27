@@ -67,6 +67,7 @@ func (s String) RH() {
 					params := route["params"].([]interface{})
 					needAuth := route["need_auth"].(bool)
 					withPlatform := route["with_platform"].(bool)
+					method := strings.ToUpper(route["method"].(string))
 					routeStr := ""
 					if withPlatform {
 						routeStr = "/{platform}/" + route["route"].(string)
@@ -98,7 +99,7 @@ func (s String) RH() {
 						h.Verify(params, module, needAuth)
 						// 业务实现
 						h.RHH(String(req.URL.Path).Split("/")[1], handler)
-					}).Methods("POST")
+					}).Methods(method)
 				}
 			}
 		}

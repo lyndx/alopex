@@ -1,0 +1,13 @@
+########################
+### WebSocket相关接口 ###
+########################
+
+list:
+
+  # 默认
+  - route: websocket
+    need_auth: false
+    with_platform: false
+    method: get
+    handler: websocket.todo
+    params: []
