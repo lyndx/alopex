@@ -7,5 +7,6 @@ Go .....
 * go get -v -x -u github.com/gorilla/mux
 * go get -v -x -u github.com/grsmv/inflect
 * go get -v -x -u github.com/fwhezfwhez/jwt
+* go get -v -x -u github.com/gorilla/websocket
 * go get -v -x -u github.com/silenceper/gowatch
 * go get -v -x -u github.com/go-sql-driver/mysql
