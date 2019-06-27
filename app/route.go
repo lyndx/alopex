@@ -19,11 +19,11 @@ var (
 // 加载路由
 func (s String) R(key string) (T, error) {
 	routeOnce.Do(func() {
-		result := make(map[string]map[string][]interface{})
+		result := make(map[string]map[string]map[string]interface{})
 		v := viper.New()
 		v.SetConfigType("yml")
 		for _, dir := range String("route").Scan("", true) {
-			result[dir] = make(map[string][]interface{})
+			result[dir] = make(map[string]map[string]interface{})
 			v.AddConfigPath("route/" + dir)
 			for _, file := range String("route/" + dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
@@ -31,12 +31,12 @@ func (s String) R(key string) (T, error) {
 				if err := v.ReadInConfig(); err != nil {
 					DIE("路由文件加载失败....")
 				}
-				items := make(map[string]interface{})
+				item := make(map[string]interface{})
 				for _, k := range v.AllKeys() {
-					items[k] = v.Get(k)
+					item[k] = v.Get(k)
 				}
-				if items["list"] != nil {
-					result[dir][rname] = items["list"].([]interface{})
+				if (item["name"] != nil) && (item["list"] != nil) {
+					result[dir][rname] = item
 				}
 			}
 		}
@@ -62,7 +62,7 @@ func (s String) RH() {
 		for _, file := range String("route/" + module).Scan(".yml", false) {
 			routes, _ := String(module).R(strings.Replace(file, ".yml", "", -1))
 			if routes.IsValid() {
-				for _, item := range TValue(routes).([]interface{}) {
+				for _, item := range TValue(routes).(map[string]interface{})["list"].([]interface{}) {
 					route := item.(map[string]interface{})
 					params := route["params"].([]interface{})
 					needAuth := route["need_auth"].(bool)

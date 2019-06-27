@@ -1,11 +1,10 @@
 ###################
-### 认证相关接口 ###
-###################
-
+# 模块说明
+name: 认证相关
+# 模块路由
 list:
-
-  # 登录
-  - route: auth/login
+  - name: 登录接口
+    route: auth/login
     need_auth: true
     with_platform: true
     method: post
@@ -23,8 +22,8 @@ list:
         label: 图片文件
         rules: [must,files]
 
-  # 退出登录
-  - route: auth/logout
+  - name: 退出登录接口
+    route: auth/logout
     need_auth: true
     with_platform: true
     method: get
