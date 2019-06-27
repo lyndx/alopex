@@ -5,8 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"reflect"
-
-	"alopex/service"
 )
 
 func init() {
@@ -21,9 +19,9 @@ func init() {
 		<head>
 		    <meta charset="utf-8">
 		    <title>接口清单</title>
-		    <link rel="stylesheet" href="https://cdn.bootcss.com/semantic-ui/2.4.1/semantic.min.css">
-		    <script src="https://cdn.bootcss.com/jquery/2.2.1/jquery.min.js"></script>
-		    <script src="https://cdn.bootcss.com/semantic-ui/2.4.1/semantic.min.js"></script>
+		    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+		    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+		    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
 		</head>
 		<body>
 		<div style="height:60px" class="ui segment" id="version">&emsp;接口开发文档</div>
@@ -87,7 +85,7 @@ func init() {
 		            var html_str = "<div class='ui tab' data-tab='" + menuKey + "'><table class='ui striped selectable inverted table' style='border-radius:0'><tbody>";
 		            var tr_str = "";
 		            $.each(items[module][group]["list"], function (key, route) {
-		                tr_str += "<tr data-key='" + key + "' data-config='" + JSON.stringify(route) + "' data-route='/" + (module == "backend" ? "backend/" : "") + (route["with_platform"] ? "{platform}/" : "") + route["route"] + "'><td>/" + (module == "backend" ? "backend/" : "") + (route["with_platform"] ? "{platform}/" : "") + route["route"] + "&nbsp;&emsp;" + route["name"] + "</td></tr>";
+		                tr_str += "<tr data-key='" + key + "' data-config='" + JSON.stringify(route) + "' data-method='"+route['method']+"' data-route='/" + (module == "backend" ? "backend/" : "") + (route["with_platform"] ? "{platform}/" : "") + route["route"] + "'><td>/" + (module == "backend" ? "backend/" : "") + (route["with_platform"] ? "{platform}/" : "") + route["route"] + "&nbsp;&emsp;" + route["name"] + "</td></tr>";
 		            });
 		            html_str += tr_str + "</tbody></table></div>";
 		            $("#api_list").append(html_str);
@@ -98,46 +96,63 @@ func init() {
 		    $('#api_list').on('click', 'tbody>tr', function () {
 		        var key = $(this).data('key');
 		        var route = $(this).data('route');
+		        var method = $(this).data('method');
 		        var config = $(this).data('config');
 		        var need_auth = config.need_auth ? '&emsp;<font color="red">需要认证</font>' : ''
 		        $('#api_info .header').html("<span style='font-weight:bold;'>[" + config.method.toUpperCase() + "]</span>&emsp;<span style='text-decoration:underline;'>" + route + "</span>");
-		        $('#api_info .api_url').val(route)
-		        $('#api_info .label').html(config.name + need_auth)
+		        $('#api_info .api_url').data('route',route).val(route);
+		        $('#api_info .label').html(config.name + need_auth);
 		        $("#json_output").html('').hide();
 		        var trs = [
-		            '<tr style="background:#aaa"><td>AuthToken</td><td>认证Token</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="TK" name="token" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text" placeholder="请先输入用户名，再点下方按钮获取AuthToken和RandomStr值" value=""/></td></tr>',
-		            '<tr style="background:#aaa"><td>RandomStr</td><td>认证Token随机字符串</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="RS" name="random_str" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text" readonly/></td></tr>',
+		            '<tr style="background:#aaa"><td>AuthToken</td><td>认证Token</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="TK" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" placeholder="请先输入用户名，再点下方按钮获取AuthToken和RandomStr值" value="lyndon"/></td></tr>',
+		            '<tr style="background:#aaa"><td>RandomStr</td><td>认证Token随机字符串</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="RS" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" readonly/></td></tr>',
 		        ];
+				if(route.indexOf("{platform}") != -1) {
+					trs[trs.length] = '<tr style="background:#ccc"><td>platform</td><td>平台标识</td><td><font color="red">必填</font></td><td></td><td>qp</td><td><input id="PF" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>'
+				}
 		        if (need_auth != "") {
 		            $('#get_tk').show()
 		        }
 		        $.each(config.params, function (k, v) {
 		            var is_must = false;
+					var rules = [];
 		            $.each(v["rules"], function (kk, vv) {
 		                if (vv == "must") {
 		                    is_must = true;
-		                    delete v["rules"][kk];
-		                }
+		                }else{
+							rules[rules.length] = vv;
+						}
 		            })
-		            trs[trs.length] = '<tr><td>' + v["field"] + '</td><td>' + v["label"] + '</td><td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td><td>' + v["rules"].join(",") + '</td><td>' + v["default"] + '</td><td><input name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text"/></td></tr>'
-		        })
+		            trs[trs.length] = '<tr><td>' + v["field"] + '</td><td>' + v["label"] + '</td><td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td><td>' + rules.join(",") + '</td><td>' + (v.hasOwnProperty("default") ? v["default"] : '') + '</td><td><input name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text"/></td></tr>'
+		        });
 		        $('#api_info .params').html(trs.join(''))
-		        $('#api_info').data('key', key).modal({
-		            transition: 'scale',
+		        $('#api_info').data({'key': key,'method': method}).modal({
 		            observeChanges: true,
+		            transition: 'scale',
 		            centered: false,
 		            closable: false,
 		        }).modal('show');
 		    });
-		
 		    $('#get_tk').click(function () {
-		        var target = $('#TK').val()
-		        $.post("/doc/get_token", {target: target}, function (token) {
-		            if (token) {
-		                $("#TK").val(token)
+		        var target = $('#TK').val();
+				if(target == ""){
+					$('#TK').focus();alert('用户名不能为空');return;
+				}
+		        $.post("/doc/get_token", {target: target}, function (data) {
+		            if (data) {
+		                $("#TK").val(data.token);
+		                $("#RS").val(data.random_str);
 		            }
-		        })
-		    })
+		        }, "json");
+		    });
+			$('#api_info .params').on("keyup", "#PF", function(){
+				var platform = $.trim($(this).val());
+				if(platform == ""){
+					platform = "{platform}";
+				}
+				var route = $('#api_info .api_url').data('route').replace('{platform}', platform);
+				$('#api_info .api_url').val(route);
+			});
 		    var get_data = function () {
 		        var data = {};
 		        $("td .C_input").each(function (index, e) {
@@ -147,32 +162,38 @@ func init() {
 		    }
 		    $("#json_output").hide();
 		    $("#submit").on("click", function () {
-		        var key = $('#api_info').data('key');
 		        var method = $('#api_info').data('method');
-		        var url_arr = $(".api_url").val().split('?');
+		        var key = $('#api_info').data('key');
+		        var url_arr = $(".api_url").val();
 		        var req_obj = {
-		            url: url_arr.shift(),
+		            url: url_arr,
 		            type: method,
-		            dataType: "json",
+					cache: false,
+					contentType: 'application/json',
 		            beforeSend: function (XMLHttpRequest) {
-		                XMLHttpRequest.setRequestHeader("token", $('#TK').val());
-		                XMLHttpRequest.setRequestHeader("random_str", $('#RS').val());
+		                XMLHttpRequest.setRequestHeader("Token", $('#TK').val());
+		                XMLHttpRequest.setRequestHeader("RandomStr", $('#RS').val());
 		            },
 		            success: function (res, status, xhr) {
-		                var statu = xhr.status + ' ' + xhr.statusText;
+		                var status = xhr.status + ' ' + xhr.statusText;
 		                var header = xhr.getAllResponseHeaders();
 		                var json_text = JSON.stringify(res, null, 4);
-		                $("#json_output").html('<pre>请求返回状态 ：' + statu + '<br/><hr/>请求头：<br/>' + header + '<hr/>返回数据：<br/>' + json_text + '</pre>');
+		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;">请求返回状态 ：' + status + '<br/><hr/>请求头：<br/>' + header + '<hr/>返回数据：<br/>' + json_text + '</pre>');
 		                $("#json_output").show();
 		            },
 		            error: function (error) {
-		                console.log(error)
+		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;">请求返回状态 ：' + error.status + '<br/><hr/>错误信息：<br/>' + error.statusText);
+		                $("#json_output").show();
 		            }
 		        }
-		        req_obj.cache = false
-		        req_obj.processData = false
-		        req_obj.data = JSON.stringify(get_data())
-		        req_obj.contentType = 'application/json'
+				var data = get_data();
+				if(method.toUpperCase() == "POST") {
+		            req_obj.data = JSON.stringify(data);
+		            req_obj.processData = false;
+				}else{
+					req_obj.data = data;
+					req_obj.dataType = 'json';
+				}
 		        $.ajax(req_obj)
 		    })
 		</script>
@@ -184,22 +205,23 @@ func init() {
 	Mux.HandleFunc("/doc/get_token", func(rep http.ResponseWriter, req *http.Request) {
 		target := req.FormValue("target")
 		token, randomStr := "", ""
-		admin, err := MD("main").Select("admins", true, "id", "user_name='"+target+"'")
-		if err == nil {
+		admin, err := MD("main").Select("admins", true, "id", "username='"+target+"'")
+		if (err == nil) && (admin != nil) {
 			id := admin.(map[string]string)["id"]
-
-			obj := Services["admin"]
-			handler := RV(obj).MethodByName(String(action).UFrist())
-			if !handler.IsValid() {
-				h.Output(402, "请求失败", "请求执行业务方法不存在")
+			obj := Services["auth"]
+			handler := RV(obj).MethodByName("GetToken")
+			if handler.IsValid() {
+				tmp := handler.Call([]reflect.Value{RV("backend"), RV(id)})
+				if tmp[2].IsNil() {
+					token = tmp[0].Interface().(string)
+					randomStr = tmp[1].Interface().(string)
+				}
 			}
-			handler.Call([]reflect.Value{RV(h)})
-
-
-
-			token, randomStr, _ = (service.AuthService{}).GetToken("backend", id)
 		}
 		bs, _ := json.Marshal(map[string]string{"token": token, "random_str": randomStr})
+		rep.WriteHeader(200)
+		rep.Header().Set("Content-Type", "application/json")
 		rep.Write(bs)
 	}).Methods("POST")
+
 }

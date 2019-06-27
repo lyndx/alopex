@@ -18,9 +18,6 @@ list:
         label: 密码
         rules: [must, '^[a-zA-Z0-9]{0,16}$']
         default: ''
-      - field: file
-        label: 图片文件
-        rules: [must,files]
 
   - name: 退出登录接口
     route: auth/logout

@@ -1,8 +1,6 @@
 package task
 
 import (
-	"fmt"
-
 	"alopex/app"
 )
 
@@ -17,5 +15,5 @@ func (t TestTask) Spec() string {
 }
 
 func (t TestTask) Handler() {
-	fmt.Println("------------")
+	//
 }
