@@ -21,6 +21,11 @@ list:
       - field: file
         label: 图片文件
         rules: [must,files]
+    return:
+      username: 用户名
+      password: 密码
+      brief: 简介
+      status: 状态
 
   - name: 退出登录接口
     route: auth/logout
@@ -29,3 +34,8 @@ list:
     method: get
     handler: auth.logout
     params: []
+    return:
+      username: 用户名
+      password: 密码
+      brief: 简介
+      status: 状态

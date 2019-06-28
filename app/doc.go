@@ -18,34 +18,31 @@ func init() {
 		<html lang="en">
 		<head>
 		    <meta charset="utf-8">
-		    <title>接口清单</title>
+		    <title>接口文档</title>
 		    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
 		    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 		    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+			<style>#api_info .ui.table td{padding:4px 10px!important}#api_info .ui.table thead th{padding:8px 10px;font-size:16px;}#api_info .ui.table,#api_info .ui.table *{border-color:#999;}</style>
 		</head>
 		<body>
-		<div style="height:60px" class="ui segment" id="version">&emsp;接口开发文档</div>
-		<div class="ui text container" style="max-width:none!important;width:1200px;margin-bottom:30px;">
-		    <div class="ui floating message">
-		        <div class="ui grid container">
-		            <div class="two wide column" style="padding:3px;background:#333">
-		                <div class="ui vertical accordion menu" style="width:100%">
-		                    <div class="item" style="padding:0;">
-		                        <div class="content active" id="menu"></div>
-		                    </div>
-		                </div>
-		            </div>
-		            <div class="fourteen wide stretched column" style="padding:0;" id="api_list"></div>
-		        </div>
-		    </div>
-		</div>
-		<div class="ui fullscreen modal" id="api_info">
-		    <div class="header">接口名称</div>
+		<div style="height:60px;font-size:20px;" class="ui segment">&nbsp;&nbsp;接口开发文档</div>
+        <div class="ui grid container" style="background:#444;position:relative;width:94%!important;min-height:90%;padding-left:160px;margin:0;margin-left:30px!important;">
+            <div class="two wide column" style="position:absolute;width:160px!important;height:100%;background:#333;top:0;left:0;padding:3px;background:#333">
+                <div class="ui vertical accordion menu" style="width:100%">
+                    <div class="item" style="padding:0;">
+                        <div class="content active" id="menu"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="fourteen wide stretched column" style="padding:0;width:100%!important;" id="api_list"></div>
+        </div>
+		<div class="ui fullscreen modal" id="api_info" style="right:0!important;">
+		    <div class="header" style="font-size:20px;font-weight:bold;">接口名称</div>
 		    <div class="content">
 		        <div class="ui floating message">
-		            <span class='ui teal tag label' style='margin-left:15px;'></span>
-		            <h4>&nbsp;请求模拟</h4>
-		            <table class="ui green celled striped table">
+		            <span class='ui teal tag label' style='margin-left:5px;'></span>
+		            <h4>&nbsp;请求参数清单</h4>
+					<table class="ui green celled striped table" style="border-radius:0;border-top:3px solid #21ba45;margin:0;">
 		                <thead>
 		                <tr>
 		                    <th>参数</th>
@@ -58,8 +55,19 @@ func init() {
 		                </thead>
 		                <tbody class="params"></tbody>
 		            </table>
+					<h4>&nbsp;返回字段说明</h4>
+					<table class="ui green celled striped table" style="border-radius:0;border-top:3px solid #21ba45">
+		                <thead>
+		                <tr>
+		                    <th>参数</th>
+		                    <th>说明</th>
+		                </tr>
+		                </thead>
+		                <tbody class="return"></tbody>
+		            </table>
 		            <div style="display:flex;align-items:center;"></div>
-		            <div class="ui fluid action input">
+					<h4>&nbsp;模拟请求</h4>
+		            <div class="ui fluid action input" style="border:10px solid #ddd;">
 		                <input placeholder="请求的接口链接" type="text" class="api_url" readonly>
 		                <button class="ui button blue" id="get_tk">获取TK（请先在TK文本框中输入测试手机号)</button>
 		                <button class="ui button red" id="submit">请求当前接口</button>
@@ -74,6 +82,7 @@ func init() {
 		
 		<script>
 		    var items = ` + string(bs) + `;
+			console.log(items)
 		    for (var module in items) {
 		        if (module == "websocket") {
 		            continue;
@@ -99,16 +108,17 @@ func init() {
 		        var method = $(this).data('method');
 		        var config = $(this).data('config');
 		        var need_auth = config.need_auth ? '&emsp;<font color="red">需要认证</font>' : ''
-		        $('#api_info .header').html("<span style='font-weight:bold;'>[" + config.method.toUpperCase() + "]</span>&emsp;<span style='text-decoration:underline;'>" + route + "</span>");
-		        $('#api_info .api_url').data('route',route).val(route);
+		        $('#api_info .header').html("<span style='font-weight:bold;background:springgreen;padding:3px;'>[" + config.method.toUpperCase() + "]</span>&emsp;<span style='text-decoration:underline;text-underline-position:under;'>" + route + "</span>");
+		        $('#api_info .api_url').data('route',route).val(route.replace('{platform}','qp'));
 		        $('#api_info .label').html(config.name + need_auth);
 		        $("#json_output").html('').hide();
-		        var trs = [
-		            '<tr style="background:#aaa"><td>AuthToken</td><td>认证Token</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="TK" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" placeholder="请先输入用户名，再点下方按钮获取AuthToken和RandomStr值" value="lyndon"/></td></tr>',
-		            '<tr style="background:#aaa"><td>RandomStr</td><td>认证Token随机字符串</td><td>' + (need_auth == '' ? '' : '<font color="red">必填</font>') + '</td><td></td><td></td><td><input id="RS" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" readonly/></td></tr>',
-		        ];
+		        var trs = [];
 				if(route.indexOf("{platform}") != -1) {
-					trs[trs.length] = '<tr style="background:#ccc"><td>platform</td><td>平台标识</td><td><font color="red">必填</font></td><td></td><td>qp</td><td><input id="PF" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>'
+					trs[trs.length] = '<tr style="background:#999;font-weight:bold;"><td>platform</td><td>平台标识</td><td><font color="red">必填</font></td><td></td><td>qp</td><td><input id="PF" value="qp" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>'
+				}
+				if(need_auth){
+					trs[trs.length] = '<tr style="background:#aaa;font-weight:bold;"><td>AuthToken</td><td>认证Token</td><td><font color="red">必填</font></td><td></td><td></td><td><input id="TK" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" placeholder="请先输入用户名，再点下方按钮获取AuthToken和RandomStr值" value="lyndon"/></td></tr>';
+		            trs[trs.length] = '<tr style="background:#aaa;font-weight:bold;"><td>RandomStr</td><td>认证Token随机字符串</td><td><font color="red">必填</font></td><td></td><td></td><td><input id="RS" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" readonly/></td></tr>';
 				}
 		        if (need_auth != "") {
 		            $('#get_tk').show()
@@ -123,14 +133,18 @@ func init() {
 							rules[rules.length] = vv;
 						}
 		            })
-		            trs[trs.length] = '<tr><td>' + v["field"] + '</td><td>' + v["label"] + '</td><td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td><td>' + rules.join(",") + '</td><td>' + (v.hasOwnProperty("default") ? v["default"] : '') + '</td><td><input name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text"/></td></tr>'
+		            trs[trs.length] = '<tr style="font-weight:bold;"><td>' + v["field"] + '</td><td>' + v["label"] + '</td><td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td><td>' + rules.join(",") + '</td><td>' + (v.hasOwnProperty("default") ? v["default"] : '') + '</td><td><input name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text"/></td></tr>'
 		        });
 		        $('#api_info .params').html(trs.join(''))
+				var rts = [];
+				for(var field in config.return) {
+		            rts[trs.length] = '<tr style="font-weight:bold;"><td>' + field + '</td><td>' + config.return[field] + '</td></tr>'
+		        }
+		        $('#api_info .return').html(rts.join(''))
 		        $('#api_info').data({'key': key,'method': method}).modal({
 		            observeChanges: true,
 		            transition: 'scale',
-		            centered: false,
-		            closable: false,
+		            centered: true
 		        }).modal('show');
 		    });
 		    $('#get_tk').click(function () {
@@ -175,14 +189,14 @@ func init() {
 		                XMLHttpRequest.setRequestHeader("RandomStr", $('#RS').val());
 		            },
 		            success: function (res, status, xhr) {
-		                var status = xhr.status + ' ' + xhr.statusText;
-		                var header = xhr.getAllResponseHeaders();
-		                var json_text = JSON.stringify(res, null, 4);
-		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;">请求返回状态 ：' + status + '<br/><hr/>请求头：<br/>' + header + '<hr/>返回数据：<br/>' + json_text + '</pre>');
+		                var data_text = JSON.stringify(res.data, null, 4);
+		                var params_all_text = JSON.stringify(res.request.params, null, 4);
+		                var params_needed_text = JSON.stringify(res.request.needed, null, 4);
+		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;font-weight:bold;">请求返回状态 ：' + res.code + '<br/><hr/>返回错误消息 ：' + res.message + '('+ res.message_detail + ')<br/><hr/>有效请求参数：<br/>' + params_needed_text + '<br/><hr/>所有请求参数：<br/>' + params_all_text + '<br/><hr/>返回数据：<br/>' + (data_text ? data_text : 'Empty . . . .') + '</pre>');
 		                $("#json_output").show();
 		            },
 		            error: function (error) {
-		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;">请求返回状态 ：' + error.status + '<br/><hr/>错误信息：<br/>' + error.statusText);
+		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;font-weight:bold;">请求返回状态 ：' + error.status + '<br/><hr/>返回错误信息：<br/>' + error.statusText);
 		                $("#json_output").show();
 		            }
 		        }

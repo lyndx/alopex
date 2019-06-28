@@ -10,3 +10,8 @@ list:
     method: get
     handler: index.index
     params: []
+    return:
+      username: 用户名
+      password: 密码
+      brief: 简介
+      status: 状态
