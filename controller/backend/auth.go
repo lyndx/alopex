@@ -12,6 +12,7 @@ func init() {
 }
 
 func (ctrl AuthController) Login(h *app.Http) {
+
 	us := service.UserService{}
 	user, err := us.GetUserByUsername("x")
 	if err != nil {

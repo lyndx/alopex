@@ -21,11 +21,11 @@ import (
 )
 
 type (
-	Float  float64
+	Float float64
 	String string
-	Int    int64
-	Bool   bool
-	T      reflect.Value
+	Int int64
+	Bool bool
+	T reflect.Value
 )
 
 // 运行时相关 //////////////////////////////////////////////////////////////////
@@ -215,10 +215,10 @@ func (s String) Write(content string) (bool, error) {
 }
 
 // 唯一字符串
-func (s String) GUID() string{
+func (s String) GUID() string {
 	b := make([]byte, 48)
 	_, err := io.ReadFull(rand.Reader, b)
-	if err != nil{
+	if err != nil {
 		return ""
 	}
 	return fmt.Sprintf("%x", md5.Sum([]byte(base64.URLEncoding.EncodeToString(b))))
@@ -407,6 +407,14 @@ func (t T) ToMS() interface{} {
 		return result
 	}
 	return v.Interface()
+}
+
+// 获取真实数据
+func (t T) Value() interface{} {
+	if t.IsValid() {
+		return t.Value()
+	}
+	return nil
 }
 
 // 根据KEY获取数据，针对数组和对象
