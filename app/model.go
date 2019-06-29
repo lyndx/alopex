@@ -593,3 +593,9 @@ func (m *Model) Change(operate string, source string, args ...string) (int, bool
 	}
 	return int(num), true, nil
 }
+
+// 调用业务方法
+func (s String)CService(args ...interface{}) []interface{} {
+
+	return []interface{}{}
+}
