@@ -186,7 +186,7 @@ func init() {
 					contentType: 'application/json',
 		            beforeSend: function (XMLHttpRequest) {
 		                XMLHttpRequest.setRequestHeader("Token", $('#TK').val());
-		                XMLHttpRequest.setRequestHeader("RandomStr", $('#RS').val());
+		                XMLHttpRequest.setRequestHeader("Random_str", $('#RS').val());
 		            },
 		            success: function (res, status, xhr) {
 		                var data_text = JSON.stringify(res.data, null, 4);
