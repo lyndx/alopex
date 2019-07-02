@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title x-data="title">{{title}}</title>
+    <link rel="stylesheet" href="xlib/semantic/semantic.min.css">
+</head>
+<body>
+
+<input x-data="ss"
+       x-value="value"
+       x-placeholder="placeholder">
+
+<div x-data="ww"><p>{{ww.prop}}</p><div x-data="a">{{  a.x}}
+
+    <div x-list="aa"
+         x-template="<p>{{ name }}<input type='button' value='{{value }}'></p>"
+    ></div>
+</div></div>
+
+<div x-toggle="fds" x-class="dsds">CCC</div>
+
+
+<style>
+    .field{padding:10px;margin:20px;border:1px solid #ccc;}
+    .field input{display:block;border:1px solid #ccc;outline:0;line-height:20px;}
+    .field .tip{display:none;}
+    .field.error{border:1px solid red;}
+    .field.error .tip{display:block;color:red;font-size:12px;line-height:20px;}
+</style>
+
+<div class="field">
+    <input x-data="fd" x-placeholder="placeholder" x-value="value" x-error="true">
+    <p class="tip">sdfdfsdfsdfs</p>
+</div>
+
+<div x-html="xx"></div>
+
+
+<script src="lib/zepto.min.js"></script>
+<script src="lib/alopex.js"></script>
+
+</body>
+</html>
