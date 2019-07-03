@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>Alopex管理系统</title>
+    <link rel="stylesheet" href="assets/css/zui.min.css"/>
+    <link rel="stylesheet" href="assets/css/zui-theme.css"/>
+
+    <link rel="stylesheet" href="assets/lib/tabs/zui.tabs.min.css"/>
+    
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/zui.min.js"></script>
+    <script src="assets/lib/tabs/zui.tabs.min.js"></script>
+</head>
+<body style="position:relative;padding-top:40px;padding-left:180px;">
+
+    <nav class="navbar navbar-inverse" role="navigation" style="position:absolute;top:0;left:0;right:0;border:0;margin:0;padding:0;">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse-example">
+                    <span class="sr-only">切换导航</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#" style="padding:0;"><img src="./assets/imgs/logo.jpg" style="display:block;height:40px;width:180px;"></a>
+            </div>
+            <div class="collapse navbar-collapse navbar-collapse-example">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">项目</a></li>
+                    <li><a href="#">需求</a></li>
+                </ul>
+                <form class="navbar-form navbar-left" role="search">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="搜索">
+                    </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#">帮助</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">探索 <b class="caret"></b></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">敏捷开发</a></li>
+                            <li><a href="#">HTML5</a></li>
+                            <li><a href="#">Javascript</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#">探索宇宙</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+    </nav>
+
+    <ul class="tree tree-menu" data-ride="tree" style="position:absolute;left:0;top:40px;bottom:0;margin:0;width:180px;border-left:0;border-right:0;border-radius:0;">
+        <li><a href="#"><i class="icon icon-user"></i>个人资料</a></li>
+        <li>
+            <a href="#"><i class="icon icon-time"></i>更新时间</a>
+            <ul>
+                <li><a href="#">今天</a></li>
+                <li><a href="#">明天</a></li>
+                <li><a href="#">昨天</a></li>
+                <li><a href="#">本周</a></li>
+            </ul>
+        </li>
+        <li><a href="#"><i class="icon icon-trash"></i>垃圾篓</a></li>
+        <li><a href="#"><i class="icon icon-list-ul"></i>全部</a></li>
+        <li class="open">
+            <a href="#"><i class="icon icon-tasks"></i>状态</a>
+            <ul>
+                <li>
+                    <a href="#"><i class="icon icon-circle-blank"></i>已就绪</a>
+                    <ul>
+                        <li><a href="#">已取消</a></li>
+                        <li><a href="#">已关闭</a></li>
+                    </ul>
+                </li>
+                <li class="active"><a href="#"><i class="icon icon-play-sign"></i>进行中</a></li>
+                <li><a href="#"><i class="icon icon-ok-sign"></i>已完成</a></li>
+            </ul>
+        </li>
+    </ul>
+
+    <div class="panel panel-default" style="height:100%;margin:0;position:relative;padding:37px 0;">
+        <div class="panel-heading" style="position:absolute;top:0;left:0;right:0;">发士大夫士大夫</div>
+        <div class="panel-body" style="height:100%;">
+            <div class="tabs" id="tabsExample"></div>
+            <script>
+                // 定义标签页
+                var tabs = [{
+                    title: 'iframe 例子',
+                    url: 'docs/partial/iframe-tab.html',
+                    type: 'iframe',
+                    forbidClose: true
+                }, {
+                    title: 'Ajax 例子',
+                    url: 'docs/partial/remote-tab.html',
+                    type: 'ajax'
+                }, {
+                    title: '自定义例子',
+                    icon: 'icon-star',
+                    type: 'custom',
+                    content: function() {
+                        return '<div class="alert alert-block alert-success"><p>这里的内容是通过函数动态生成的，每次刷新下面的时间都会更新。</p><p>' + (new Date().format('yyyy-MM-dd hh:mm:ss')) +   '</p></div>';
+                    }
+                }, {
+                    title: 'MZUI',
+                    url: 'http://zui.sexy/m',
+                    type: 'iframe'
+                }, {
+                    defaultTitle: '无法加载的标签页',
+                    url: 'http://zui1.sexy'
+                }];
+
+                // 初始化标签页管理器
+                $('#tabsExample').tabs({tabs: tabs});
+
+            </script>
+        </div>
+        <div class="panel-footer" style="position:absolute;bottom:0;left:0;right:0;">发士大夫士大夫</div>
+    </div>
+
+
+<!--
+<div id="page-header">
+    <img src="https://cdn4.buysellads.net/uu/1/3386/1525189943-38523.png">
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+</div>
+
+<div id="page-menu">
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+    <div>sdfsdfs</div>
+</div>
+
+<div id="page-body">
+    <a href="">sdfsdfs</a>
+    <textarea></textarea>
+    <input type="text" value="sdfsd">
+    <hr/>
+    <pre>
+
+        sdfdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
+        fdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
+        fdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
+
+    </pre>
+</div>
+
+<!--
+<input x-data="ss"
+       x-value="value"
+       x-placeholder="placeholder">
+<div x-data="ww"><p>{{ww.prop}}</p><div x-data="a">{{  a.x}}
+    <div x-list="aa"
+         x-template="<p>{{ name }}<input type='button' value='{{value }}'></p>"
+    ></div>
+</div></div>
+<div x-toggle="fds" x-class="dsds">CCC</div>
+<style>
+    .field{padding:10px;margin:20px;border:1px solid #ccc;}
+    .field.error{border:1px solid red;}
+    .field input{display:block;border:1px solid #ccc;outline:0;line-height:20px;}
+    .field .tip{display:none;}
+    .field.error .tip{display:block;color:red;font-size:12px;line-height:20px;}
+</style>
+<div class="field">
+    <input x-data="fd" x-placeholder="placeholder" x-value="value">
+    <p class="tip"></p>
+</div>
+<div x-html="xx"></div>
+-->
+
+
+</body>
+</html>
