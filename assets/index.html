@@ -6,28 +6,49 @@
     <title>Alopex管理系统</title>
     <link rel="stylesheet" href="assets/css/zui.min.css"/>
     <link rel="stylesheet" href="assets/css/zui-theme.css"/>
-    <style>html, body{
-        height:100%;
-    }
-    .tabs{
-        min-height:100%;
-    }
-    .tabs-navbar, .tab-nav-item{
-        padding:0
-    }
-    .tabs-container{
-        top:32px;
-        overflow-y:auto;
-    }
-    .tabs-container > .tab-pane{
-        overflow-y:auto;
-    }
-    .tabs-container > .tab-pane > iframe{
-        height:99% !important;
-    }
-    .pager{
-        margin:5px 0;
-    }
+    <style>
+        html, body{
+            height:100%;
+        }
+        .tabs{
+            min-height:100%;
+        }
+        .tabs-navbar, .tab-nav-item{
+            padding:0
+        }
+        .tabs-container{
+            top:32px;
+            overflow-y:auto;
+        }
+        .tabs-container > .tab-pane{
+            overflow-y:auto;
+        }
+        .tabs-container > .tab-pane > iframe{
+            height:99% !important;
+        }
+        .pager{
+            margin:5px 0;
+        }
+        .modal-backdrop{
+            z-index:1000000;
+        }
+        .modal{
+            z-index:10000000;
+            left:180px;
+        }
+        .modal-body{
+            overflow:hidden;
+            overflow-y:auto!important;
+        }
+        .form-control{
+            height:auto;
+            min-height:37px;
+        }
+        .radio-primary,.checkbox-primary{
+            display:inline-block;
+            margin-right:10px;
+            margin-top:5px;
+        }
     </style>
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/zui.min.js"></script>
@@ -43,6 +64,9 @@
 
     <link rel="stylesheet" href="assets/lib/datetimepicker/datetimepicker.min.css">
     <script src="assets/lib/datetimepicker/datetimepicker.min.js"></script>
+
+    <link rel="stylesheet" href="assets/lib/uploader/zui.uploader.min.css">
+    <script src="assets/lib/uploader/zui.uploader.min.js"></script>
 
 </head>
 <body style="position:relative;padding-top:40px;padding-left:180px;">
@@ -156,7 +180,7 @@
             <div class="btn-toolbar" style="margin-bottom:2px;position:relative;z-index:10000;">
                 <div class="btn-group">
                     <div class="btn input-group" style="padding:0;margin-top:2px;border:0;margin-right:5px;">
-                        <button class="btn btn-success disabled">详情</button>
+                        <button class="btn btn-success" data-toggle="modal" data-target="#showModal">详情</button>
                         <button class="btn btn-info disabled">编辑</button>
                         <button class="btn btn-danger disabled">删除</button>
                     </div>
@@ -199,135 +223,185 @@
             <div class="datagrid-container"></div>
             <div class="pager"></div>
         </div>
+
+        <div class="modal fade" id="showModal">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">关闭</span></button>
+                        <h4 class="modal-title">标题</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="panel-group" id="accordionPanels" aria-multiselectable="true">
+                            <div class="panel panel-default">
+                                <div class="panel-heading" id="headingOne">
+                                    <h4 class="panel-title">
+                                        <a data-toggle="collapse" data-parent="#accordionPanels" href="#collapseOne">折叠面板 1</a>
+                                    </h4>
+                                </div>
+                                <div id="collapseOne" class="panel-collapse collapse in">
+                                    <div class="panel-body">
+
+                                        <div class="form-group has-success">
+                                            <label>输入框（success）</label>
+                                            <input type="text" class="form-control">
+                                            <div class="help-block">这是帮助性提示文本。</div>
+                                        </div>
+                                        <div class="form-group has-warning">
+                                            <label>输入框（warning）</label>
+                                            <input type="text" class="form-control">
+                                        </div>
+                                        <div class="form-group has-error">
+                                            <label>输入框（error）</label>
+                                            <input type="text" class="form-control">
+                                        </div>
+
+                                        <div class="form-group has-error">
+                                            <label>日期</label>
+                                            <div class="input-group form-control">
+                                                <input type="text" class="form-control form-date" placeholder="开始日期">
+                                                <span class="input-group-addon fix-border">-</span>
+                                                <input type="text" class="form-control form-date" placeholder="结束日期">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group has-error">
+                                            <label>文件（error）</label>
+                                            <div id='uploader' class="uploader form-control" data-ride="uploader">
+                                                <div class="uploader-message text-center">
+                                                    <div class="content"></div>
+                                                    <button type="button" class="close">×</button>
+                                                </div>
+                                                <div class="uploader-files file-list file-list-lg" data-drag-placeholder="请拖拽文件到此处"></div>
+                                                <div class="uploader-actions">
+                                                    <div class="uploader-status pull-right text-muted"></div>
+                                                    <button type="button" class="btn btn-link uploader-btn-browse"><i class="icon icon-plus"></i> 选择文件</button>
+                                                    <button type="button" class="btn btn-link uploader-btn-start"><i class="icon icon-cloud-upload"></i> 开始上传</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group has-error">
+                                            <label>开关（error）</label>
+                                            <div class="form-control">
+                                                <div class="switch">
+                                                    <input type="checkbox">
+                                                    <label>夜间模式</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group has-error">
+                                            <label>单选（error）</label>
+                                            <div class="form-control">
+                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" id="primaryradio1"><label for="primaryradio1">选项一</label></div>
+                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio2"><label for="primaryradio2">选项二</label></div>
+                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio3"><label for="primaryradio3">选项三</label></div>
+                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" disabled="disabled" id="primaryradio4"><label for="primaryradio4">禁用</label></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group has-error">
+                                            <label>多选（error）</label>
+                                            <div class="form-control">
+                                                <div class="checkbox-primary"><input type="checkbox" id="primaryCheckbox1"><label for="primaryCheckbox1">未选中</label></div>
+                                                <div class="checkbox-primary"><input type="checkbox" checked="checked" id="primaryCheckbox2"><label for="primaryCheckbox2">选中</label></div>
+                                                <div class="checkbox-primary"><input type="checkbox" checked="checked" disabled="disabled" id="primaryCheckbox3"><label for="primaryCheckbox3">禁用</label></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group has-error">
+                                            <label>下拉（error）</label>
+                                            <div class="form-control">
+                                                <select data-placeholder="选择" class="chosen-select form-control">
+                                                    <option value="strawberries">草莓</option>
+                                                    <option value="apple">苹果</option>
+                                                    <option value="orange">橙子</option>
+                                                    <option value="cherry">樱桃</option>
+                                                    <option value="banana">香蕉</option>
+                                                    <option value="figs">无花果</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel panel-default">
+                                <div class="panel-heading" id="headingTwo">
+                                    <h4 class="panel-title">
+                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordionPanels" href="#collapseTwo">折叠面板 2</a>
+                                    </h4>
+                                </div>
+                                <div id="collapseTwo" class="panel-collapse collapse">
+                                    <div class="panel-body">
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            <button type="button" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
-            $('select.chosen-select').chosen({
-                no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
-                disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
-                search_contains: true         // 从任意位置开始检索
-            });
-            $(".form-date").datetimepicker({
-                language: "zh-CN",
-                weekStart: 1,
-                todayBtn: 1,
-                autoclose: 1,
-                todayHighlight: 1,
-                startView: 2,
-                minView: 2,
-                forceParse: 0,
-                format: "yyyy-mm-dd"
-            });
-            $('#datagridStripedExample').datagrid({
-                height: "page",
-                dataSource: {
-                    cols: [
-                        {label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true, checkbox: true},
-                        {label: '英雄', name: 'hero', width: 'auto'},
-                        {label: '动作', name: 'action', width: 'auto'},
-                        {label: '物品', name: 'item', width: 'auto'},
-                        {label: '描述', name: 'desc', width: 'auto', minWidth: 200, html: true},
-                    ],
-                    data: [
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: ''},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-                        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-                    ],
-                },
-                states: {
-                    fixedTopUntil: 0,
-                    fixedLeftUntil: 1,
-                    fixedRightFrom: 3,
-                    pager: {page: 1, recPerPage: 20}
-                },
-                sortable: true,
-                hoverCell: true,
-                checkable: true,
-                checkByClickRow: false,
-            });
+			$('#uploader').uploader({
+				autoUpload: true,
+			});
+			$('select.chosen-select').chosen({
+				no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
+				disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
+				search_contains: true         // 从任意位置开始检索
+			});
+			$(".form-date").datetimepicker({
+				language: "zh-CN",
+				weekStart: 1,
+				todayBtn: 1,
+				autoclose: 1,
+				todayHighlight: 1,
+				startView: 2,
+				minView: 2,
+				forceParse: 0,
+				format: "yyyy-mm-dd"
+			});
+			$('#datagridStripedExample').datagrid({
+				height: "page",
+				dataSource: {
+					cols: [
+						{label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true, checkbox: true},
+						{label: '英雄', name: 'hero', width: 'auto'},
+						{label: '动作', name: 'action', width: 'auto'},
+						{label: '物品', name: 'item', width: 'auto'},
+						{label: '描述', name: 'desc', width: 'auto', minWidth: 200, html: true},
+					],
+					data: [
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: ''},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
+						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
+					],
+				},
+				states: {
+					fixedTopUntil: 0,
+					fixedLeftUntil: 1,
+					fixedRightFrom: 3,
+					pager: {page: 1, recPerPage: 20}
+				},
+				sortable: true,
+				hoverCell: true,
+				checkable: true,
+				checkByClickRow: false,
+			});
         </script>
 
 
@@ -367,7 +441,6 @@
     </pre>
 </div>
 
-<!--
 <input x-data="ss"
        x-value="value"
        x-placeholder="placeholder">
