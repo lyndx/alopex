@@ -21,11 +21,11 @@ import (
 )
 
 type (
-	Float float64
+	Float  float64
 	String string
-	Int int64
-	Bool bool
-	T reflect.Value
+	Int    int64
+	Bool   bool
+	T      reflect.Value
 )
 
 // 运行时相关 //////////////////////////////////////////////////////////////////

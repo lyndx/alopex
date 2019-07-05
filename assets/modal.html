@@ -1,0 +1,154 @@
+<div id="body-modal" class="modal-content">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">关闭</span></button>
+        <h4 class="modal-title">标题</h4>
+    </div>
+    <div class="modal-body">
+
+        <div class="panel-group" id="accordionPanels" aria-multiselectable="true">
+            <div class="panel panel-default">
+                <div class="panel-heading" id="headingOne">
+                    <h4 class="panel-title">
+                        <a data-toggle="collapse" data-parent="#accordionPanels" href="#collapseOne">折叠面板 1</a>
+                    </h4>
+                </div>
+                <div id="collapseOne" class="panel-collapse collapse in">
+                    <div class="panel-body">
+
+                        <div class="form-group has-success">
+                            <label>输入框（success）</label>
+                            <input type="text" class="form-control">
+                            <div class="help-block">这是帮助性提示文本。</div>
+                        </div>
+                        <div class="form-group has-warning">
+                            <label>输入框（warning）</label>
+                            <input type="text" class="form-control">
+                        </div>
+                        <div class="form-group has-error">
+                            <label>输入框（error）</label>
+                            <input type="text" class="form-control">
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>日期</label>
+                            <div class="input-group form-control">
+                                <input type="text" class="form-control form-date" placeholder="开始日期">
+                                <span class="input-group-addon fix-border">-</span>
+                                <input type="text" class="form-control form-date" placeholder="结束日期">
+                            </div>
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>文件（error）</label>
+                            <div class="uploader form-control" data-ride="uploader">
+                                <div class="uploader-message text-center">
+                                    <div class="content"></div>
+                                    <button type="button" class="close">×</button>
+                                </div>
+                                <div class="uploader-files file-list file-list-lg" data-drag-placeholder="请拖拽文件到此处"></div>
+                                <div class="uploader-actions">
+                                    <div class="uploader-status pull-right text-muted"></div>
+                                    <button type="button" class="btn btn-link uploader-btn-browse"><i class="icon icon-plus"></i> 选择文件</button>
+                                    <button type="button" class="btn btn-link uploader-btn-start"><i class="icon icon-cloud-upload"></i> 开始上传</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group has-error">
+                            <label>开关（error）</label>
+                            <div class="form-control">
+                                <div class="switch">
+                                    <input type="checkbox">
+                                    <label>夜间模式</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>单选（error）</label>
+                            <div class="form-control">
+                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" id="primaryradio1"><label for="primaryradio1">选项一</label></div>
+                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio2"><label for="primaryradio2">选项二</label></div>
+                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio3"><label for="primaryradio3">选项三</label></div>
+                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" disabled="disabled" id="primaryradio4"><label for="primaryradio4">禁用</label></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>多选（error）</label>
+                            <div class="form-control">
+                                <div class="checkbox-primary"><input type="checkbox" id="primaryCheckbox1"><label for="primaryCheckbox1">未选中</label></div>
+                                <div class="checkbox-primary"><input type="checkbox" checked="checked" id="primaryCheckbox2"><label for="primaryCheckbox2">选中</label></div>
+                                <div class="checkbox-primary"><input type="checkbox" checked="checked" disabled="disabled" id="primaryCheckbox3"><label for="primaryCheckbox3">禁用</label></div>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>下拉（error）</label>
+                            <div class="form-control">
+                                <select data-placeholder="选择" class="chosen-select form-control">
+                                    <option value="strawberries">草莓</option>
+                                    <option value="apple">苹果</option>
+                                    <option value="orange">橙子</option>
+                                    <option value="cherry">樱桃</option>
+                                    <option value="banana">香蕉</option>
+                                    <option value="figs">无花果</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group has-error">
+                            <label>编辑器</label>
+                            <div id="editor" class="form-control"></div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading" id="headingTwo">
+                    <h4 class="panel-title">
+                        <a class="collapsed" data-toggle="collapse" data-parent="#accordionPanels" href="#collapseTwo">折叠面板 2</a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse collapse">
+                    <div class="panel-body">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+            <button type="button" class="btn btn-primary">保存</button>
+        </div>
+    </div>
+</div>
+<script>
+    $("#body-modal .form-date").datetimepicker({
+        language: "zh-CN",
+        weekStart: 1,
+        todayBtn: 1,
+        autoclose: 1,
+        todayHighlight: 1,
+        startView: 2,
+        minView: 2,
+        forceParse: 0,
+        format: "yyyy-mm-dd"
+    });
+    $('#body-modal .uploader').uploader({
+        url: 'your/file/upload/url',
+        autoUpload: true,
+        rename: true
+    });
+    $('#body-modal .chosen-select').chosen({
+        no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
+        disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
+        search_contains: true         // 从任意位置开始检索
+    });
+    var E = window.wangEditor;
+    var editor = new E('#editor');
+    editor.customConfig.uploadImgShowBase64 = true;
+    editor.create()
+
+</script>

@@ -6,55 +6,17 @@
     <title>Alopex管理系统</title>
     <link rel="stylesheet" href="assets/css/zui.min.css"/>
     <link rel="stylesheet" href="assets/css/zui-theme.css"/>
-    <style>
-        html, body{
-            height:100%;
-        }
-        .tabs{
-            min-height:100%;
-        }
-        .tabs-navbar, .tab-nav-item{
-            padding:0
-        }
-        .tabs-container{
-            top:32px;
-            overflow-y:auto;
-        }
-        .tabs-container > .tab-pane{
-            overflow-y:auto;
-        }
-        .tabs-container > .tab-pane > iframe{
-            height:99% !important;
-        }
-        .pager{
-            margin:5px 0;
-        }
-        .modal-backdrop{
-            z-index:1000000;
-        }
-        .modal{
-            z-index:10000000;
-            left:180px;
-        }
-        .modal-body{
-            overflow:hidden;
-            overflow-y:auto!important;
-        }
-        .form-control{
-            height:auto;
-            min-height:37px;
-        }
-        .radio-primary,.checkbox-primary{
-            display:inline-block;
-            margin-right:10px;
-            margin-top:5px;
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/alopex.css"/>
+
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/zui.min.js"></script>
+    <script src="assets/js/alopex.js"></script>
 
     <link rel="stylesheet" href="assets/lib/tabs/zui.tabs.min.css"/>
     <script src="assets/lib/tabs/zui.tabs.min.js"></script>
+
+    <link rel="stylesheet" href="assets/lib/datetimepicker/datetimepicker.min.css">
+    <script src="assets/lib/datetimepicker/datetimepicker.min.js"></script>
 
     <link rel="stylesheet" href="assets/lib/datagrid/zui.datagrid.min.css"/>
     <script src="assets/lib/datagrid/zui.datagrid.min.js"></script>
@@ -62,385 +24,102 @@
     <link rel="stylesheet" href="assets/lib/chosen/chosen.min.css">
     <script src="assets/lib/chosen/chosen.min.js"></script>
 
-    <link rel="stylesheet" href="assets/lib/datetimepicker/datetimepicker.min.css">
-    <script src="assets/lib/datetimepicker/datetimepicker.min.js"></script>
+    <link rel="stylesheet" href="assets/lib/wangeditor/wangEditor.min.css">
+    <script src="assets/lib/wangeditor/wangEditor.min.js"></script>
 
     <link rel="stylesheet" href="assets/lib/uploader/zui.uploader.min.css">
     <script src="assets/lib/uploader/zui.uploader.min.js"></script>
 
 </head>
-<body style="position:relative;padding-top:40px;padding-left:180px;">
 
-<nav class="navbar navbar-inverse" role="navigation" style="position:absolute;top:0;left:0;right:0;border:0;margin:0;padding:0;">
-    <div class="container-fluid">
-        <div class="navbar-header" style="position:relative;z-index:10000;">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">切换导航</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="#" style="padding:0;"><img src="./assets/imgs/logo.jpg" style="display:block;height:40px;width:180px;"></a>
-        </div>
-        <div class="collapse navbar-collapse" style="position:relative;z-index:1000;background:#000;">
-            <ul class="nav navbar-nav">
-                <li class="active"><a href="#">项目</a></li>
-                <li><a href="#">需求</a></li>
-            </ul>
-            <form class="navbar-form navbar-left" role="search">
-                <div class="form-group">
-                    <input type="text" class="form-control" placeholder="搜索">
-                </div>
-                <button type="submit" class="btn btn-default">搜索</button>
-            </form>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="#">帮助</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">探索 <b class="caret"></b></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#">敏捷开发</a></li>
-                        <li><a href="#">HTML5</a></li>
-                        <li><a href="#">Javascript</a></li>
-                        <li class="divider"></li>
-                        <li><a href="#">探索宇宙</a></li>
-                    </ul>
-                </li>
-            </ul>
+<body>
 
-        </div>
-    </div>
-</nav>
-
-<ul class="tree tree-menu" data-ride="tree" style="position:absolute;left:0;top:40px;bottom:0;margin:0;width:180px;border-left:0;border-right:0;border-radius:0;">
-    <li><a href="#"><i class="icon icon-user"></i>个人资料</a></li>
-    <li>
-        <a href="#"><i class="icon icon-time"></i>更新时间</a>
-        <ul>
-            <li><a href="#">今天</a></li>
-            <li><a href="#">明天</a></li>
-            <li><a href="#">昨天</a></li>
-            <li><a href="#">本周</a></li>
-        </ul>
-    </li>
-    <li><a href="#"><i class="icon icon-trash"></i>垃圾篓</a></li>
-    <li><a href="#"><i class="icon icon-list-ul"></i>全部</a></li>
-    <li class="open">
-        <a href="#"><i class="icon icon-tasks"></i>状态</a>
-        <ul>
-            <li>
-                <a href="#"><i class="icon icon-circle-blank"></i>已就绪</a>
-                <ul>
-                    <li><a href="#">已取消</a></li>
-                    <li><a href="#">已关闭</a></li>
+    <nav id="header" class="navbar navbar-inverse" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header-box"><span class="sr-only">切换导航</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
+                <a class="navbar-brand" href="#"><img src="./assets/imgs/logo.jpg"></a>
+            </div>
+            <div id="header-box" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="#">项目</a></li>
+                    <li><a href="#">需求</a></li>
                 </ul>
-            </li>
-            <li class="active"><a href="#"><i class="icon icon-play-sign"></i>进行中</a></li>
-            <li><a href="#"><i class="icon icon-ok-sign"></i>已完成</a></li>
-        </ul>
-    </li>
-</ul>
-
-<div class="panel panel-default" style="height:100%;margin:0;position:relative;padding-bottom:41px;">
-    <div class="panel-body" style="height:100%;overflow-y:auto;">
-
-        <!--
-        <div class="tabs" id="tabsExample"></div>
-        <script>
-            var tabs = [{
-                title: 'iframe 例子',
-                url: 'docs/partial/iframe-tab.html',
-                type: 'iframe',
-                forbidClose: true
-            }, {
-                title: 'Ajax 例子',
-                url: 'docs/partial/remote-tab.html',
-                type: 'ajax'
-            }, {
-                title: '自定义例子',
-                icon: 'icon-star',
-                type: 'custom',
-                content: function() {
-                    return '<div class="alert alert-block alert-success"><p>这里的内容是通过函数动态生成的，每次刷新下面的时间都会更新。</p>' +
-                            '<p>' + (new Date().format('yyyy-MM-dd hh:mm:ss')) +   '</p><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>' +
-                            '</div>';
-                }
-            }, {
-                title: 'MZUI',
-                url: 'http://zui.sexy/m',
-                type: 'iframe'
-            }, {
-                defaultTitle: '无法加载的标签页',
-                url: 'http://zui1.sexy'
-            }];
-            $('#tabsExample').tabs({tabs: tabs});
-        </script>
-        -->
-
-        <div id="datagridStripedExample" class="datagrid datagrid-borderless" style="height:90%;">
-            <div class="btn-toolbar" style="margin-bottom:2px;position:relative;z-index:10000;">
-                <div class="btn-group">
-                    <div class="btn input-group" style="padding:0;margin-top:2px;border:0;margin-right:5px;">
-                        <button class="btn btn-success" data-toggle="modal" data-target="#showModal">详情</button>
-                        <button class="btn btn-info disabled">编辑</button>
-                        <button class="btn btn-danger disabled">删除</button>
+                <form class="navbar-form navbar-left" role="search">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="搜索">
                     </div>
-                    <div class="btn input-group" style="width:260px;padding:0;margin-top:2px;border:0;margin-right:5px;">
-                        <div class="input-group-btn"><button class="btn btn-default">选择类型</button></div>
-                        <select data-placeholder="选择类型" class="chosen-select form-control" style="width:100%">
-                            <option value="0">待审核</option>
-                            <option value="1">已通过</option>
-                            <option value="2">已拒绝</option>
-                        </select>
-                    </div>
-                    <div class="btn input-group" style="width:200px;padding:0;margin-top:2px;border:0;margin-right:5px;">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">模糊搜索&nbsp;<span class="caret"></span></button>
-                            <ul class="dropdown-menu pull-left" role="menu">
-                                <li><a href="#">用户名</a></li>
-                                <li><a href="#">邮箱</a></li>
-                                <li><a href="#">银行卡号</a></li>
-                            </ul>
-                        </div>
-                        <input type="text" class="form-control">
-                    </div>
-                    <div class="btn input-group" style="width:290px;padding:0;margin-top:2px;border:0;margin-right:5px;">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">起止时间&nbsp;<span class="caret"></span></button>
-                            <ul class="dropdown-menu pull-left" role="menu">
-                                <li><a href="#">起止时间</a></li>
-                                <li><a href="#">登录时间</a></li>
-                            </ul>
-                        </div>
-                        <input type="text" class="form-control form-date" placeholder="开始日期">
-                        <span class="input-group-addon fix-border" style="padding:2px;">-</span>
-                        <input type="text" class="form-control form-date" placeholder="结束日期">
-                    </div>
-                    <div class="btn input-group" style="padding:0;margin-top:2px;border:0;">
-                        <button class="btn btn-primary">搜索</button>
-                    </div>
-                </div>
-            </div>
-            <div class="datagrid-container"></div>
-            <div class="pager"></div>
-        </div>
+                    <button type="submit" class="btn btn-default">搜索</button>
+                </form>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#" class="bg-warning">银商入款 <span class="label label-badge">12</span></a></li>
+                    <li><a href="#" class="bg-success">入款申请 <span class="label label-badge">12</span></a></li>
+                    <li><a href="#" class="bg-danger">出款申请 <span class="label label-badge">12</span></a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown">探索 <b class="caret"></b></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#">敏捷开发</a></li>
+                            <li><a href="#">HTML5</a></li>
+                            <li><a href="#">Javascript</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#">探索宇宙</a></li>
+                        </ul>
+                    </li>
+                </ul>
 
-        <div class="modal fade" id="showModal">
-            <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">关闭</span></button>
-                        <h4 class="modal-title">标题</h4>
-                    </div>
-                    <div class="modal-body">
-                        <div class="panel-group" id="accordionPanels" aria-multiselectable="true">
-                            <div class="panel panel-default">
-                                <div class="panel-heading" id="headingOne">
-                                    <h4 class="panel-title">
-                                        <a data-toggle="collapse" data-parent="#accordionPanels" href="#collapseOne">折叠面板 1</a>
-                                    </h4>
-                                </div>
-                                <div id="collapseOne" class="panel-collapse collapse in">
-                                    <div class="panel-body">
-
-                                        <div class="form-group has-success">
-                                            <label>输入框（success）</label>
-                                            <input type="text" class="form-control">
-                                            <div class="help-block">这是帮助性提示文本。</div>
-                                        </div>
-                                        <div class="form-group has-warning">
-                                            <label>输入框（warning）</label>
-                                            <input type="text" class="form-control">
-                                        </div>
-                                        <div class="form-group has-error">
-                                            <label>输入框（error）</label>
-                                            <input type="text" class="form-control">
-                                        </div>
-
-                                        <div class="form-group has-error">
-                                            <label>日期</label>
-                                            <div class="input-group form-control">
-                                                <input type="text" class="form-control form-date" placeholder="开始日期">
-                                                <span class="input-group-addon fix-border">-</span>
-                                                <input type="text" class="form-control form-date" placeholder="结束日期">
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group has-error">
-                                            <label>文件（error）</label>
-                                            <div id='uploader' class="uploader form-control" data-ride="uploader">
-                                                <div class="uploader-message text-center">
-                                                    <div class="content"></div>
-                                                    <button type="button" class="close">×</button>
-                                                </div>
-                                                <div class="uploader-files file-list file-list-lg" data-drag-placeholder="请拖拽文件到此处"></div>
-                                                <div class="uploader-actions">
-                                                    <div class="uploader-status pull-right text-muted"></div>
-                                                    <button type="button" class="btn btn-link uploader-btn-browse"><i class="icon icon-plus"></i> 选择文件</button>
-                                                    <button type="button" class="btn btn-link uploader-btn-start"><i class="icon icon-cloud-upload"></i> 开始上传</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group has-error">
-                                            <label>开关（error）</label>
-                                            <div class="form-control">
-                                                <div class="switch">
-                                                    <input type="checkbox">
-                                                    <label>夜间模式</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group has-error">
-                                            <label>单选（error）</label>
-                                            <div class="form-control">
-                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" id="primaryradio1"><label for="primaryradio1">选项一</label></div>
-                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio2"><label for="primaryradio2">选项二</label></div>
-                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio3"><label for="primaryradio3">选项三</label></div>
-                                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" disabled="disabled" id="primaryradio4"><label for="primaryradio4">禁用</label></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group has-error">
-                                            <label>多选（error）</label>
-                                            <div class="form-control">
-                                                <div class="checkbox-primary"><input type="checkbox" id="primaryCheckbox1"><label for="primaryCheckbox1">未选中</label></div>
-                                                <div class="checkbox-primary"><input type="checkbox" checked="checked" id="primaryCheckbox2"><label for="primaryCheckbox2">选中</label></div>
-                                                <div class="checkbox-primary"><input type="checkbox" checked="checked" disabled="disabled" id="primaryCheckbox3"><label for="primaryCheckbox3">禁用</label></div>
-                                            </div>
-                                        </div>
-
-                                        <div class="form-group has-error">
-                                            <label>下拉（error）</label>
-                                            <div class="form-control">
-                                                <select data-placeholder="选择" class="chosen-select form-control">
-                                                    <option value="strawberries">草莓</option>
-                                                    <option value="apple">苹果</option>
-                                                    <option value="orange">橙子</option>
-                                                    <option value="cherry">樱桃</option>
-                                                    <option value="banana">香蕉</option>
-                                                    <option value="figs">无花果</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="panel panel-default">
-                                <div class="panel-heading" id="headingTwo">
-                                    <h4 class="panel-title">
-                                        <a class="collapsed" data-toggle="collapse" data-parent="#accordionPanels" href="#collapseTwo">折叠面板 2</a>
-                                    </h4>
-                                </div>
-                                <div id="collapseTwo" class="panel-collapse collapse">
-                                    <div class="panel-body">
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="footer">
-                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                            <button type="button" class="btn btn-primary">保存</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+    </nav>
 
-        <script>
-			$('#uploader').uploader({
-				autoUpload: true,
-			});
-			$('select.chosen-select').chosen({
-				no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
-				disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
-				search_contains: true         // 从任意位置开始检索
-			});
-			$(".form-date").datetimepicker({
-				language: "zh-CN",
-				weekStart: 1,
-				todayBtn: 1,
-				autoclose: 1,
-				todayHighlight: 1,
-				startView: 2,
-				minView: 2,
-				forceParse: 0,
-				format: "yyyy-mm-dd"
-			});
-			$('#datagridStripedExample').datagrid({
-				height: "page",
-				dataSource: {
-					cols: [
-						{label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true, checkbox: true},
-						{label: '英雄', name: 'hero', width: 'auto'},
-						{label: '动作', name: 'action', width: 'auto'},
-						{label: '物品', name: 'item', width: 'auto'},
-						{label: '描述', name: 'desc', width: 'auto', minWidth: 200, html: true},
-					],
-					data: [
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: ''},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '<div class="switch switch-inline" style="margin-top:-5px;"><input type="checkbox"><label>夜间模式</label></div>'},
-						{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', desc: '某某滚蛋'},
-					],
-				},
-				states: {
-					fixedTopUntil: 0,
-					fixedLeftUntil: 1,
-					fixedRightFrom: 3,
-					pager: {page: 1, recPerPage: 20}
-				},
-				sortable: true,
-				hoverCell: true,
-				checkable: true,
-				checkByClickRow: false,
-			});
-        </script>
+    <ul id="menu" class="tree tree-menu" data-ride="tree">
+        <li><a href="#"><i class="icon icon-user"></i>内容管理</a></li>
+        <li>
+            <a href="#"><i class="icon icon-time"></i>系统管理</a>
+            <ul>
+                <li><a href="#">配置管理</a></li>
+                <li><a href="#">日志管理</a></li>
+                <li><a href="javascript:void(0);">数据管理</a></li>
+                <li><a href="javascript:void(0);">缓存管理</a></li>
+            </ul>
+        </li>
+        <li><a href="#"><i class="icon icon-trash"></i>游戏管理</a></li>
+        <li><a href="#"><i class="icon icon-list-ul"></i>活动管理</a></li>
+        <li>
+            <a href="#"><i class="icon icon-tasks"></i>财务管理</a>
+            <ul>
+                <li><a href="#"><i class="icon icon-play-sign"></i>报表管理</a></li>
+                <li><a href="#"><i class="icon icon-ok-sign"></i>流水管理</a></li>
+            </ul>
+        </li>
+    </ul>
 
+    <div id="body-box" class="panel panel-default">
+        <div class="panel-body">
 
+            <div id="body-tabs" class="tabs"></div>
+            <script>
+                var tabs = [{
+                    title: '外站',
+                    url: 'http://zui.sexy/m',
+                    type: 'iframe'
+                }, {
+                    title: '表格',
+                    icon: 'icon-star',
+                    url: './table.html',
+                    type: 'ajax'
+                }, {
+                    defaultTitle: '无法加载的标签页',
+                    url: 'http://zui1.sexy'
+                }];
+                $('#body-tabs').tabs({tabs: tabs});
+            </script>
+
+        </div>
+        <div id="body-footer" class="panel-footer">&copyright;dssdfs</div>
     </div>
-    <div class="panel-footer" style="position:absolute;bottom:0;left:0;right:0;">发士大夫士大夫</div>
-</div>
 
 
 <!--
-<div id="page-header">
-    <img src="https://cdn4.buysellads.net/uu/1/3386/1525189943-38523.png">
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-</div>
-
-<div id="page-menu">
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-    <div>sdfsdfs</div>
-</div>
-
-<div id="page-body">
-    <a href="">sdfsdfs</a>
-    <textarea></textarea>
-    <input type="text" value="sdfsd">
-    <hr/>
-    <pre>
-
-        sdfdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
-        fdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
-        fdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduffdfsdjfhsdfsduf
-
-    </pre>
-</div>
-
 <input x-data="ss"
        x-value="value"
        x-placeholder="placeholder">
@@ -463,7 +142,6 @@
 </div>
 <div x-html="xx"></div>
 -->
-
 
 </body>
 </html>

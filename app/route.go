@@ -25,7 +25,7 @@ func (s String) R(key string) (T, error) {
 		for _, dir := range String("route").Scan("", true) {
 			result[dir] = make(map[string]map[string]interface{})
 			v.AddConfigPath("route/" + dir)
-			for _, file := range String("route/" + dir).Scan(".yml", false) {
+			for _, file := range String("route/"+dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
 				v.SetConfigName(rname)
 				if err := v.ReadInConfig(); err != nil {
@@ -59,7 +59,7 @@ func (s String) RH() {
 		if s.ToString() != module {
 			continue
 		}
-		for _, file := range String("route/" + module).Scan(".yml", false) {
+		for _, file := range String("route/"+module).Scan(".yml", false) {
 			routes, _ := String(module).R(strings.Replace(file, ".yml", "", -1))
 			if routes.IsValid() {
 				for _, item := range TValue(routes).(map[string]interface{})["list"].([]interface{}) {
