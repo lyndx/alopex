@@ -1,4 +1,3 @@
-/* Alopex.js */
 !(function () {
     if (window['_']) return;
     // 日志重构
@@ -120,22 +119,20 @@
             parent.find('.tip').text('书屋错误');
         }
     });
-    // 模拟数据
-    _.ss = {value: "sdsdsd", placeholder: "sdfsdfsd"};
-    _.aa = [
-        {name: 'sdfs', value: 234242},
-        {name: 'sdfs', value: 234242},
-        {name: 'sdfs', value: 234242},
-        {name: 'sdfs', value: 234242},
-        {name: 'sdfs', value: 234242},
-    ];
-    _.ww = 23;
-    _.xx = 'X'
-    _.a = {x: "axxxxxxxxx"}
-    _.fd = {value: 234234, placeholder: '请输入验证码'};
-    _.title = "Alopex管理端"
 })();
 
+$(document).ready(function () {
+    _.page_footer = {copyright: '&copy;2019~2024 万里独行侠  田伯光'};
+    _.page_header = {
+        logo_image: './assets/imgs/logo.jpg',
+        home_url: '/',
+        userinfo_url: '#userinfo',
+        refresh_url: '#refresh',
+        logout_url: '#logout',
+        clean_url: '#clean',
+    };
+
+});
 
 
 
