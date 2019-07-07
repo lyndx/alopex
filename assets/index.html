@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="assets/css/zui-theme.css"/>
     <link rel="stylesheet" href="assets/css/alopex.css"/>
 
-    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/lib/jquery/jquery.js"></script>
     <script src="assets/js/zui.min.js"></script>
     <script src="assets/js/alopex.js"></script>
 
@@ -93,20 +93,20 @@
 
         <div id="body-tabs" class="tabs"></div>
         <script>
-            var tabs = [{
-                title: '外站',
-                url: 'sds',
-                type: 'iframe'
-            }, {
-                title: '表格',
-                icon: 'icon-star',
-                url: './table.html',
-                type: 'ajax'
-            }, {
-                defaultTitle: '无法加载的标签页',
-                url: 'sd'
-            }];
-            $('#body-tabs').tabs({tabs: tabs});
+			var tabs = [{
+				title: '外站',
+				url: 'sds',
+				type: 'iframe'
+			}, {
+				title: '表格',
+				icon: 'icon-star',
+				url: './table.html',
+				type: 'ajax'
+			}, {
+				defaultTitle: '无法加载的标签页',
+				url: 'sd'
+			}];
+			$('#body-tabs').tabs({tabs: tabs});
         </script>
 
     </div>

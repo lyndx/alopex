@@ -1,128 +1,142 @@
 !(function () {
-    if (window['_']) return;
+    if (window['_']) {
+        return;
+    }
     // 日志重构
-    window.log = window.console.log
-    delete window.console;
+    (window.log = window.console.log) && (delete window.console);
     // 字串扩展
-    String.prototype.endWith = function (endStr) {
-        var d = this.length - endStr.length;
-        return (d >= 0 && this.lastIndexOf(endStr) == d);
+    String.prototype.trim = function (str) {
+        str = str + '';
+        str = (str !== undefined) || (str !== '') ? str : ' ';
+        return this.replace(new RegExp('^\\' + str + '+|\\' + str + '+$', 'g'), '', '');
     };
-    String.prototype.beginWith = function (endStr) {
-        return this.indexOf(endStr) == 0;
+    String.prototype.ltrim = function (str) {
+        return this.replace(new RegExp('^\\' + str + '+', 'g'), '');
+    };
+    String.prototype.rtrim = function (str) {
+        return this.replace(new RegExp('\\' + str + '+$', 'g'), '');
+    };
+    String.prototype.hasPrefix = function (str) {
+        return this.indexOf(str) === 0;
+    };
+    String.prototype.hasSuffix = function (str) {
+        let d = this.length - str.length;
+        return (d >= 0 && this.lastIndexOf(str) === d);
     };
     // 数据绑定
     window._ = new Proxy({}, {
         set: function (obj, prop, value) {
+            if ((undefined !== obj[prop]) && (obj[prop] === value)) {
+                return false;
+            }
+            // 赋值
             obj[prop] = value;
             // 数据
-            $.each($('[x-data=' + prop + ']'), function (i, tag) {
-                // 属性
-                $.each(tag.attributes, function (ii, attr) {
-                    let [nodeName, nodeValue] = [$.trim(attr.nodeName), $.trim(attr.value)];
-                    if ((nodeName != 'x-data') && nodeName.beginWith('x-')) {
-                        nodeName = nodeName.replace('x-', '');
-                        nodeValue = obj[prop][nodeValue] != undefined ? obj[prop][nodeValue] : $(tag).attr(nodeName);
-                        $(tag).attr(nodeName, nodeValue);
-                    }
-                });
-                // 内容
-                let htmlStr = $(tag).html();
-                let fields = htmlStr.match(/\{\{[^\{\}\r\n]+\}\}/g);
-                $.each(fields, function (ii, field) {
-                    let trimField = $.trim(field.replace('{{', '').replace('}}', ''));
-                    if (trimField.beginWith(prop + '.')) {
-                        trimField = trimField.replace(prop + '.', '');
-                        let value = obj[prop][trimField] ? obj[prop][trimField] : '';
-                        htmlStr = htmlStr.replace(field, value);
-                    } else if (trimField == prop) {
-                        htmlStr = htmlStr.replace(field, obj[prop]);
-                    }
-                });
-                $(tag).html(htmlStr);
-            });
-            let field = obj[prop] != undefined ? obj[prop] : false;
-            // 列表
-            $.each($('[x-list=' + prop + ']'), function (i, tag) {
-                $(tag).html('');
-                let items = field ? field : [];
-                if (items.length > 0) {
-                    let template = $.trim($(tag).attr('x-template'));
-                    let fields = template.match(/\{\{[^\{\}\r\n]+\}\}/g);
-                    let htmlStr = [];
-                    $.each(items, function (ii, item) {
-                        let itemStr = template;
-                        $.each(fields, function (iii, field) {
-                            let trimField = $.trim(field.replace('{{', '').replace('}}', ''));
-                            let value = item[trimField] ? item[trimField] : '';
-                            itemStr = itemStr.replace(field, value);
+            let [pvalue, t_attrs, t_list, t_toggle, t_html] = [(undefined !== obj[prop]) ? obj[prop] : '', $('[x-data=' + prop + ']'), $('[x-list=' + prop + ']'), $('[x-toggle]'), $('[x-html=' + prop + ']')]
+            if (t_attrs.length > 0) {
+                $.each(t_attrs, function (i, tag) {
+                    let [tobj, tattrs] = [$(tag), tag.attributes];
+                    // 属性赋值
+                    if (tattrs.length > 1) {
+                        $.each(tattrs, function (ii, v) {
+                            let [name, field] = [v.nodeName.trim(), v.value.trim()];
+                            if (('x-data' !== name) && name.hasPrefix('x-')) {
+                                name = name.ltrim('x-');
+                                let ovalue = tobj.attr(name);
+                                value = $.isPlainObject(pvalue) && (undefined !== pvalue[field]) ? pvalue[field] : (ovalue ? ovalue : '');
+                                tobj.attr(name, value);
+                            }
                         });
-                        htmlStr[htmlStr.length] = itemStr;
-                    });
-                    $(tag).html(htmlStr.join(''));
-                }
-            });
+                    }
+                    // 内容赋值
+                    let hstr = tobj.html();
+                    let fields = hstr.match(/\{\{[^\{\}\r\n]+\}\}/g);
+                    if ($.isArray(fields) && (fields.length > 0)) {
+                        $.each(fields, function (ii, v) {
+                            let [field, value] = [v.ltrim('{{', '').rtrim('}}', '').trim(), ''];
+                            if (prop === field) {
+                                value = pvalue;
+                            } else if (field.hasPrefix(prop + '.')) {
+                                field = field.ltrim(prop + '.', '');
+                                value = $.isPlainObject(pvalue) && (undefined !== pvalue[field]) ? pvalue[field] : '';
+                            }
+                            hstr = hstr.replace(v, value);
+                        });
+                        tobj.html(hstr);
+                    }
+                });
+            }
+            // 列表
+            if (t_list.length > 0) {
+                let list = pvalue.isArray() ? pvalue : [];
+                $.each(t_list, function (i, tag) {
+                    let otag = $(tag);
+                    otag.html('');
+                    if (list.length > 0) {
+                        let template = otag.attr('x-template').trim();
+                        let [fields, hstr] = [template.match(/\{\{[^\{\}\r\n]+\}\}/g), []];
+                        $.each(list, function (ii, item) {
+                            let istr = template;
+                            if ($.isArray(fields) && (fields.length > 0)) {
+                                $.each(fields, function (iii, v) {
+                                    let field = v.ltrim('{{').rtrim('}}').trim();
+                                    let value = $.isPlainObject(item) && (undefined !== item[field]) ? item[field] : '';
+                                    istr = istr.replace(v, value);
+                                });
+                            }
+                            hstr[hstr.length] = istr;
+                        });
+                        otag.html(hstr.join(''));
+                    }
+                });
+            }
             // 切换
-            $.each($('[x-toggle]'), function (i, tag) {
-                if ($.trim($(tag).attr('x-toggle')) == prop) {
-                    let nodeClass = $.trim($(tag).attr('x-class'));
-                    if (field) {
-                        if (nodeClass != "") {
-                            $(tag).addClass(nodeClass)
+            if (t_toggle.length > 0) {
+                $.each(t_toggle, function (i, tag) {
+                    if (prop === $(tag).attr('x-toggle').trim()) {
+                        let nclass = $(tag).attr('x-class').trim();
+                        if (pvalue) {
+                            if ('' !== nclass) {
+                                $(tag).addClass(nclass)
+                            } else {
+                                $(tag).show();
+                            }
                         } else {
-                            $(tag).show();
-                        }
-                    } else {
-                        if (nodeClass != "") {
-                            $(tag).removeClass(nodeClass)
-                        } else {
-                            $(tag).hide();
+                            if ('' !== nclass) {
+                                $(tag).removeClass(nclass)
+                            } else {
+                                $(tag).hide();
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
             // HTML片段
-            $.each($('[x-html=' + prop + ']'), function (i, tag) {
-                let htmlPath = field ? (field + '') : '';
-                if (htmlPath == '') {
-                    $(tag).html('');
-                }
-                if (!htmlPath.endWith(".html")) {
-                    htmlPath += '.html';
-                }
-                $.ajax({
-                    url: htmlPath.toLowerCase(),
-                    cache: true,
-                    success: function (htmlStr) {
-                        $(tag).html(htmlStr);
-                        _.dd = {xc: "sdfsdfsdfsdferd"}
-                    },
-                    error: function () {
+            if (t_html.length > 0) {
+                $.each($('[x-html=' + prop + ']'), function (i, tag) {
+                    if ((typeof pvalue != 'string') || ('' === pvalue)) {
                         $(tag).html('');
                     }
+                    if (!pvalue.hasSuffix('.html')) {
+                        pvalue += '.html';
+                    }
+                    $.ajax({
+                        url: pvalue.toLowerCase(),
+                        cache: true,
+                        error: function () {
+                            $(tag).html('');
+                        },
+                        success: function (hstr) {
+                            $(tag).html(hstr);
+                        },
+                    });
                 });
-            });
+            }
             return true;
-        }
-    });
-    // 焦点时间
-    $('body').on('focus', 'input', function () {
-        let parent = $(this).parent();
-        parent.removeClass('error');
-        parent.find('.tip').text('');
-    }).on('blur', 'input', function () {
-        let v = $(this).val();
-        _.fd = {value: v};
-        if (v == "") {
-            let parent = $(this).parent();
-            parent.addClass('error');
-            parent.find('.tip').text('书屋错误');
-        }
+        },
     });
 })();
-
 $(document).ready(function () {
-    _.page_footer = {copyright: '&copy;2019~2024 万里独行侠  田伯光'};
     _.page_header = {
         logo_image: './assets/imgs/logo.jpg',
         home_url: '/',
@@ -131,8 +145,86 @@ $(document).ready(function () {
         logout_url: '#logout',
         clean_url: '#clean',
     };
-
+    _.page_footer = {copyright: '&copy;2019~2024 万里独行侠  田伯光'};
+    // 焦点事件
+    $('body').on('click', '.has-error', function () {
+        $(this).removeClass('has-error').find('.help-block').html('');
+    }).on('click', '.form-submit', function () {
+        let form = $(this).parent().parent();
+        if (form.find('.has-error').length > 0) {
+            //return;
+        }
+        let [fields, isOK, result] = [form.find('.form-group'), true, {}];
+        if (fields.length > 0) {
+            $.each(fields, function (i, tag) {
+                let otag = $(tag);
+                otag.find('.help-block').remove();
+                let [name, label, must, type, regex, value] = [otag.attr('f-name'), otag.find('label').text(), otag.attr('f-must'), otag.attr('f-type'), otag.attr('f-regex'), ''];
+                name = (undefined !== name) && ('' !== name.trim()) ? name.trim() : '';
+                if ('' !== name) {
+                    label = (undefined !== label) ? label.trim() : name;
+                    must = (undefined !== must) && ('true' === must.trim().toLowerCase());
+                    type = (undefined !== type) && ('' !== type.trim().toLowerCase()) ? type.trim().toLowerCase() : 'string';
+                    regex = (undefined !== regex) ? regex.trim() : '';
+                    if (('input' === type) || ('textarea' === type)) {
+                        value = otag.find(type).val().trim();
+                    } else if ('daterange' === type) {
+                        let tags = otag.find('input');
+                        value = [];
+                        if (tags.length === 2) {
+                            let [start, end] = [$(tags[0]).val().trim(), $(tags[1]).val().trim()];
+                            if (('' !== start) && ('' !== end) && (start > end)) {
+                                $(tags[0]).val('');
+                                start = '';
+                            }
+                            value = [start, end];
+                        }
+                    } else if ('switch' === type) {
+                        let tags = otag.find('input:checked');
+                        value = 0;
+                        if (tags.length > 0) {
+                            value = 1;
+                        }
+                    } else if ('checkbox' === type) {
+                        let tags = otag.find('input:checked');
+                        value = [];
+                        if (tags.length > 0) {
+                            $.each(tags, function (k, v) {
+                                value[value.length] = $(v).val().trim();
+                            });
+                        }
+                    } else if ('radio' === type) {
+                        let tmp = otag.find('input:checked');
+                        if (undefined !== tmp) {
+                            value = tmp.val().trim();
+                        }
+                    } else {
+                        value = otag.data('value');
+                        if (undefined === value) {
+                            value = '';
+                        }
+                    }
+                    if (must && (('' === value) || ($.isArray(value) && (value.length < 1)))) {
+                        otag.addClass('has-error').append('<p class="help-block">' + label + '不能为空！</p>');
+                        isOK = false;
+                        return;
+                    }
+                    if ((typeof value == 'string') && ('' !== regex)) {
+                        let regs = regex.split(' ');
+                        let reg = regs.length > 1 ? (new RegExp(regs[0], regs[1])) : (new RegExp(regs[0]));
+                        if (!reg.test(value)) {
+                            otag.addClass('has-error').append('<p class="help-block">' + label + '校验失败！</p>');
+                            isOK = false;
+                            return;
+                        }
+                    }
+                    result[name] = value;
+                }
+            });
+            if (!isOK) {
+                result = {};
+            }
+            log(result);
+        }
+    });
 });
-
-
-

@@ -1,7 +1,10 @@
 <div id="body-modal" class="modal-content">
     <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">关闭</span></button>
-        <h4 class="modal-title">标题</h4>
+        <button type="button" class="close" data-dismiss="modal">
+            <span aria-hidden="true">×</span>
+            <span class="sr-only">关闭</span>
+        </button>
+        <h4 class="modal-title"></h4>
     </div>
     <div class="modal-body">
 
@@ -15,21 +18,34 @@
                 <div id="collapseOne" class="panel-collapse collapse in">
                     <div class="panel-body">
 
-                        <div class="form-group has-success">
-                            <label>输入框（success）</label>
-                            <input type="text" class="form-control">
-                            <div class="help-block">这是帮助性提示文本。</div>
-                        </div>
-                        <div class="form-group has-warning">
-                            <label>输入框（warning）</label>
-                            <input type="text" class="form-control">
-                        </div>
-                        <div class="form-group has-error">
-                            <label>输入框（error）</label>
-                            <input type="text" class="form-control">
+                        <div class="form-group"
+                             f-name="username"
+                             f-must="true" f-type="input"
+                             f-regex="^[a-z0-9\-_]{6,12}$ i">
+                            <label>用户名</label>
+                            <input type="text" class="form-control"/>
                         </div>
 
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="password"
+                             f-must="true" f-type="textarea"
+                             f-regex="^[a-z0-9\-_]{6,12}$ i">
+                            <label>密码</label>
+                            <textarea class="form-control"></textarea>
+                        </div>
+
+                        <div class="form-group"
+                             f-name="email"
+                             f-must="true" f-type="input"
+                             f-regex="^[a-z0-9\-_]{6,12}$ i">
+                            <label>邮箱</label>
+                            <input type="text" class="form-control"/>
+                        </div>
+
+
+                        <div class="form-group"
+                             f-name="range"
+                             f-must="true" f-type="daterange">
                             <label>日期</label>
                             <div class="input-group form-control">
                                 <input type="text" class="form-control form-date" placeholder="开始日期">
@@ -53,7 +69,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="switch"
+                             f-must="true" f-type="switch">
                             <label>开关（error）</label>
                             <div class="form-control">
                                 <div class="switch">
@@ -63,17 +81,21 @@
                             </div>
                         </div>
 
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="radio"
+                             f-must="true" f-type="radio">
                             <label>单选（error）</label>
                             <div class="form-control">
-                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" id="primaryradio1"><label for="primaryradio1">选项一</label></div>
-                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio2"><label for="primaryradio2">选项二</label></div>
-                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" id="primaryradio3"><label for="primaryradio3">选项三</label></div>
-                                <div class="radio-primary"><input type="radio" name="primaryRadioGroup1" checked="checked" disabled="disabled" id="primaryradio4"><label for="primaryradio4">禁用</label></div>
+                                <div class="radio-primary"><input type="radio" name="x"><label>选项一</label></div>
+                                <div class="radio-primary"><input type="radio" name="x"><label>选项二</label></div>
+                                <div class="radio-primary"><input type="radio" name="x" checked><label>选项三</label></div>
+                                <div class="radio-primary"><input type="radio" name="x" checked disabled="disabled"><label>禁用</label></div>
                             </div>
                         </div>
 
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="checkbox"
+                             f-must="true" f-type="checkbox">
                             <label>多选（error）</label>
                             <div class="form-control">
                                 <div class="checkbox-primary"><input type="checkbox" id="primaryCheckbox1"><label for="primaryCheckbox1">未选中</label></div>
@@ -82,7 +104,9 @@
                             </div>
                         </div>
 
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="select"
+                             f-must="true" f-type="select">
                             <label>下拉（error）</label>
                             <div class="form-control">
                                 <select data-placeholder="选择" class="chosen-select form-control">
@@ -96,11 +120,17 @@
                             </div>
                         </div>
 
-                        <div class="form-group has-error">
+                        <div class="form-group"
+                             f-name="editor"
+                             f-must="true" f-type="editor">
                             <label>编辑器</label>
                             <div id="editor" class="form-control"></div>
                         </div>
 
+                        <div class="footer">
+                            <button type="button" class="btn btn-default">重置</button>
+                            <button type="button" class="btn btn-primary form-submit">保存</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -118,37 +148,34 @@
             </div>
         </div>
 
-        <div class="footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-            <button type="button" class="btn btn-primary">保存</button>
-        </div>
+
     </div>
 </div>
 <script>
-    $("#body-modal .form-date").datetimepicker({
-        language: "zh-CN",
-        weekStart: 1,
-        todayBtn: 1,
-        autoclose: 1,
-        todayHighlight: 1,
-        startView: 2,
-        minView: 2,
-        forceParse: 0,
-        format: "yyyy-mm-dd"
-    });
-    $('#body-modal .uploader').uploader({
-        url: 'your/file/upload/url',
-        autoUpload: true,
-        rename: true
-    });
-    $('#body-modal .chosen-select').chosen({
-        no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
-        disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
-        search_contains: true         // 从任意位置开始检索
-    });
-    var E = window.wangEditor;
-    var editor = new E('#editor');
-    editor.customConfig.uploadImgShowBase64 = true;
-    editor.create()
+	$("#body-modal .form-date").datetimepicker({
+		language: "zh-CN",
+		weekStart: 1,
+		todayBtn: 1,
+		autoclose: 1,
+		todayHighlight: 1,
+		startView: 2,
+		minView: 2,
+		forceParse: 0,
+		format: "yyyy-mm-dd"
+	});
+	$('#body-modal .uploader').uploader({
+		url: 'your/file/upload/url',
+		autoUpload: true,
+		rename: true
+	});
+	$('#body-modal .chosen-select').chosen({
+		no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
+		disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
+		search_contains: true         // 从任意位置开始检索
+	});
+	var E = window.wangEditor;
+	var editor = new E('#editor');
+	editor.customConfig.uploadImgShowBase64 = true;
+	editor.create()
 
 </script>
