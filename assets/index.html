@@ -90,29 +90,10 @@
 <!-- 页面主体 -->
 <div id="body-box" class="panel panel-default">
     <div class="panel-body">
-
         <div id="body-tabs" class="tabs"></div>
-        <script>
-			var tabs = [{
-				title: '外站',
-				url: 'sds',
-				type: 'iframe'
-			}, {
-				title: '表格',
-				icon: 'icon-star',
-				url: './table.html',
-				type: 'ajax'
-			}, {
-				defaultTitle: '无法加载的标签页',
-				url: 'sd'
-			}];
-			$('#body-tabs').tabs({tabs: tabs});
-        </script>
-
     </div>
     <div id="body-footer" class="panel-footer" x-data="page_footer">{{page_footer.copyright}}</div>
 </div>
-
 
 <!--
 <input x-data="ss"
@@ -137,6 +118,5 @@
 </div>
 <div x-html="xx"></div>
 -->
-
 </body>
 </html>

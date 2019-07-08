@@ -11,3 +11,7 @@ is_developer: true
 is_backend_service: true
 # 是否为前端服务
 is_frontend_service: false
+# 上传文件路径
+upload_path: /mnt/d/Pages/alopex/assets/upload
+# 前端地址
+page_url: http://alopex.com

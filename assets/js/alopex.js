@@ -23,6 +23,14 @@
         let d = this.length - str.length;
         return (d >= 0 && this.lastIndexOf(str) === d);
     };
+    // 认证数据
+    window.authinfo = {token: '', random_str: ''}
+    authinfo.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIxNTYyNTc0MDg2IiwicmFuZG9tX3N0ciI6Ijg5MjQ0OGU0OTIxMDRhYzNmYmZjMThjMjUyZTg1ODdhIiwidXNlcl9pZCI6IjEifQ==.E1ZtYMEBIUS26TKNaxSXWJMJPGleG8DAdWcDRfzIu+8=';
+    authinfo.random_str = '892448e492104ac3fbfc18c252e8587a';
+    // 表单数据
+    window.fdata = {};
+    // 列表数据
+    window.table = {};
     // 数据绑定
     window._ = new Proxy({}, {
         set: function (obj, prop, value) {
@@ -146,13 +154,112 @@ $(document).ready(function () {
         clean_url: '#clean',
     };
     _.page_footer = {copyright: '&copy;2019~2024 万里独行侠  田伯光'};
-    // 焦点事件
-    $('body').on('click', '.has-error', function () {
+    // 标签页
+    $('#body-tabs').tabs({
+        tabs: [{
+            forbidClose: true,
+            title: '表格',
+            icon: 'icon-star',
+            url: './table.html',
+            type: 'ajax'
+        }],
+        onLoad: function (tab) {
+            if (tab.url == './table.html') {
+                for (let id in table['daterange']) {
+                    $('#' + id).datetimepicker('remove');
+                }
+            }
+        }
+    });
+    // 事件
+    $('body').on('shown.zui.modal', '#triggerModal', function () {
+        let [uploader, selecter, editor, daterange] = [$(this).find('.uploader'), $(this).find('.chosen-select'), $(this).find('.form-editor'), $(this).find('.form-daterange')];
+        fdata['editor'] = fdata['uploader'] = fdata['daterange'] = {};
+        // 文件上传
+        if (uploader.length > 0) {
+            $.each(uploader, function (i, tag) {
+                let id = $(tag).attr('id');
+                if (id) {
+                    fdata['uploader'][id] = $(tag).uploader({
+                        url: 'http://127.0.0.1:81/backend/qp/common/upload/sdfsd',
+                        prevent_duplicates: true,
+                        unique_names: true,
+                        autoUpload: true,
+                        runtimes: 'html5',
+                        max_retries: 0,
+                        rename: true,
+                        headers: {
+                            'Debug': 'true',
+                            'Token': authinfo.token,
+                            'Random_str': authinfo.random_str
+                        },
+                        onUploadComplete: function (files) {
+                            let otag = $(this.$[0]).parent();
+                            let value = otag.data('value');
+                            value = $.isArray(value) ? value : [];
+                            $.each(files, function (k, v) {
+                                if (v.url) {
+                                    value[value.length] = v.url;
+                                }
+                            });
+                            otag.data('value', value);
+                        }
+                    });
+                }
+            });
+        }
+        // 选择框
+        if (selecter.length > 0) {
+            $.each(selecter, function (i, tag) {
+                $(tag).chosen({no_results_text: '没有找到'});
+            });
+        }
+        // 富文本
+        if (editor.length > 0) {
+            var E = window.wangEditor;
+            $.each(editor, function (i, tag) {
+                let id = $(tag).attr('id');
+                if (id) {
+                    let editor = new E('#' + id);
+                    editor.customConfig.uploadImgShowBase64 = true;
+                    editor.create()
+                    fdata['editor'][id] = editor;
+                }
+            });
+        }
+        // 时间区间
+        if (daterange.length > 0) {
+            $.each(daterange, function (i, tag) {
+                let id = $(tag).attr('id');
+                if (id) {
+                    fdata['daterange'][id] = $(tag).datetimepicker({
+                        language: "zh-CN",
+                        weekStart: 1,
+                        todayBtn: 1,
+                        autoclose: 1,
+                        todayHighlight: 1,
+                        startView: 2,
+                        minView: 2,
+                        forceParse: 0,
+                        format: "yyyy-mm-dd"
+                    });
+                }
+            });
+        }
+    }).on('hidden.zui.modal', '#triggerModal', function () {
+        for (let id in fdata['daterange']) {
+            $('#' + id).datetimepicker('remove');
+        }
+        fdata['editor'] = fdata['uploader'] = fdata['daterange'] = {};
+    }).on('click', '#body-modal .has-error', function () {
         $(this).removeClass('has-error').find('.help-block').html('');
-    }).on('click', '.form-submit', function () {
+    }).on('change', '#body-modal select.chosen-select', function () {
+        let value = $(this).val();
+        $(this).parents('.form-group').data('value', value);
+    }).on('click', '#body-modal .form-submit', function () {
         let form = $(this).parent().parent();
         if (form.find('.has-error').length > 0) {
-            //return;
+            form.data('data', {});
         }
         let [fields, isOK, result] = [form.find('.form-group'), true, {}];
         if (fields.length > 0) {
@@ -162,9 +269,9 @@ $(document).ready(function () {
                 let [name, label, must, type, regex, value] = [otag.attr('f-name'), otag.find('label').text(), otag.attr('f-must'), otag.attr('f-type'), otag.attr('f-regex'), ''];
                 name = (undefined !== name) && ('' !== name.trim()) ? name.trim() : '';
                 if ('' !== name) {
-                    label = (undefined !== label) ? label.trim() : name;
                     must = (undefined !== must) && ('true' === must.trim().toLowerCase());
                     type = (undefined !== type) && ('' !== type.trim().toLowerCase()) ? type.trim().toLowerCase() : 'string';
+                    label = (undefined !== label) ? label.trim() : name;
                     regex = (undefined !== regex) ? regex.trim() : '';
                     if (('input' === type) || ('textarea' === type)) {
                         value = otag.find(type).val().trim();
@@ -177,7 +284,9 @@ $(document).ready(function () {
                                 $(tags[0]).val('');
                                 start = '';
                             }
-                            value = [start, end];
+                            if (start || end) {
+                                value = [start, end];
+                            }
                         }
                     } else if ('switch' === type) {
                         let tags = otag.find('input:checked');
@@ -198,13 +307,24 @@ $(document).ready(function () {
                         if (undefined !== tmp) {
                             value = tmp.val().trim();
                         }
+                    } else if ('editor' === type) {
+                        let id = otag.find('.form-editor').attr('id');
+                        let tmp = fdata['editor'][id]
+                        if (undefined !== tmp) {
+                            value = tmp.txt.html();
+                            if ('<p><br></p>' === value){
+                                value = '';
+                            }
+                        }
+                        log(value)
                     } else {
                         value = otag.data('value');
                         if (undefined === value) {
                             value = '';
                         }
                     }
-                    if (must && (('' === value) || ($.isArray(value) && (value.length < 1)))) {
+
+                    if (must && (('' === value) || ($.isArray(value) && (value.length === 0)))) {
                         otag.addClass('has-error').append('<p class="help-block">' + label + '不能为空！</p>');
                         isOK = false;
                         return;
@@ -225,6 +345,7 @@ $(document).ready(function () {
                 result = {};
             }
             log(result);
+            form.data('data', result);
         }
     });
 });

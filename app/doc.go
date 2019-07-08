@@ -82,7 +82,6 @@ func init() {
 		
 		<script>
 		    var items = ` + string(bs) + `;
-			console.log(items)
 		    for (var module in items) {
 		        if (module == "websocket") {
 		            continue;
@@ -113,15 +112,19 @@ func init() {
 		        $('#api_info .label').html(config.name + need_auth);
 		        $("#json_output").html('').hide();
 		        var trs = [];
-				if(route.indexOf("{platform}") != -1) {
-					trs[trs.length] = '<tr style="background:#999;font-weight:bold;"><td>platform</td><td>平台标识</td><td><font color="red">必填</font></td><td></td><td>qp</td><td><input id="PF" value="qp" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>'
-				}
 				if(need_auth){
 					trs[trs.length] = '<tr style="background:#aaa;font-weight:bold;"><td>AuthToken</td><td>认证Token</td><td><font color="red">必填</font></td><td></td><td></td><td><input id="TK" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" placeholder="请先输入用户名，再点下方按钮获取AuthToken和RandomStr值" value="lyndon"/></td></tr>';
 		            trs[trs.length] = '<tr style="background:#aaa;font-weight:bold;"><td>RandomStr</td><td>认证Token随机字符串</td><td><font color="red">必填</font></td><td></td><td></td><td><input id="RS" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text" readonly/></td></tr>';
 				}
+				if(route.indexOf("{platform}") > -1) {
+					trs[trs.length] = '<tr style="background:#999;font-weight:bold;"><td>platform</td><td>平台标识</td><td><font color="red">必填</font></td><td></td><td>qp</td><td><input id="PF" value="qp" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>';
+				}
+                if(route.indexOf("common/upload/{path}") > -1) {
+					trs[trs.length] = '<tr style="background:#999;font-weight:bold;"><td>path</td><td>上传目录</td><td><font color="red">必填</font></td><td></td><td></td><td><input id="PATH" value="" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" type="text"/></td></tr>';
+					trs[trs.length] = '<tr style="font-weight:bold;"><td>file</td><td>文件</td><td><font color="red">必填</font></td><td></td><td></td><td><input class="C_input" type="file" name="file" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;"/></td></tr>';
+				}
 		        if (need_auth != "") {
-		            $('#get_tk').show()
+		            $('#get_tk').show();
 		        }
 		        $.each(config.params, function (k, v) {
 		            var is_must = false;
@@ -132,13 +135,20 @@ func init() {
 		                }else{
 							rules[rules.length] = vv;
 						}
-		            })
-		            trs[trs.length] = '<tr style="font-weight:bold;"><td>' + v["field"] + '</td><td>' + v["label"] + '</td><td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td><td>' + rules.join(",") + '</td><td>' + (v.hasOwnProperty("default") ? v["default"] : '') + '</td><td><input name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;" class="C_input" type="text"/></td></tr>'
+		            });
+		            trs[trs.length] = '<tr style="font-weight:bold;">'+
+										'<td>' + v["field"] + '</td>'+
+										'<td>' + v["label"] + '</td>'+
+										'<td>' + (is_must ? '<font color="red">必填</font>' : '<font color="grey">非必填</font>') + '</td>'+
+										'<td>' + rules.join(",") + '</td>'+
+										'<td>' + (v.hasOwnProperty("default") ? v["default"] : '') + '</td>'+
+										'<td><input class="C_input" type="text" name="' + v["field"] + '" style="width:100%;padding:5px 10px;border:1px solid #ccc;outline:0;border-radius:4px;"/></td>'+
+									  '</tr>';
 		        });
 		        $('#api_info .params').html(trs.join(''))
 				var rts = [];
 				for(var field in config.return) {
-		            rts[trs.length] = '<tr style="font-weight:bold;"><td>' + field + '</td><td>' + config.return[field] + '</td></tr>'
+		            rts[rts.length] = '<tr style="font-weight:bold;"><td>' + field + '</td><td>' + config.return[field] + '</td></tr>'
 		        }
 		        $('#api_info .return').html(rts.join(''))
 		        $('#api_info').data({'key': key,'method': method}).modal({
@@ -159,21 +169,34 @@ func init() {
 		            }
 		        }, "json");
 		    });
-			$('#api_info .params').on("keyup", "#PF", function(){
-				var platform = $.trim($(this).val());
-				if(platform == ""){
-					platform = "{platform}";
+			$('#api_info .api_url').val(($('#api_info .api_url').data('route')+'').replace('{platform}', 'qp'));
+			var change_route = function(){
+				var platform = $.trim($('#PF').val());
+				if(platform == ''){
+					platform = '{platform}';
 				}
-				var route = $('#api_info .api_url').data('route').replace('{platform}', platform);
+				var path = $.trim($('#PATH').val());
+				if(path == ''){
+					path = '{path}';
+				}
+				var route = ($('#api_info .api_url').data('route')+'').replace('{platform}', platform).replace('{path}', path);
 				$('#api_info .api_url').val(route);
-			});
+			};
+			$('#api_info .params').on('keyup', '#PF', change_route).on('keyup', '#PATH', change_route);
 		    var get_data = function () {
-		        var data = {};
+				if ($('#api_info .api_url').data('route').indexOf("common/upload/{path}") > -1) {
+					let data = new FormData();
+					$("td .C_input").each(function (i, e) {
+			            data.append(e.name, (e.name == 'file') ? (e.files.length > 0 ? e.files[0] : '') : $.trim(e.value));
+			        });
+					return data;
+		        }
+				var data = {};
 		        $("td .C_input").each(function (index, e) {
 		            data[e.name] = $.trim(e.value);
 		        });
 		        return data
-		    }
+		    };
 		    $("#json_output").hide();
 		    $("#submit").on("click", function () {
 		        var method = $('#api_info').data('method');
@@ -183,8 +206,9 @@ func init() {
 		            url: url_arr,
 		            type: method,
 					cache: false,
-					contentType: 'application/json',
+					dataType:'json',
 		            beforeSend: function (XMLHttpRequest) {
+		                XMLHttpRequest.setRequestHeader("Debug", 'true');
 		                XMLHttpRequest.setRequestHeader("Token", $('#TK').val());
 		                XMLHttpRequest.setRequestHeader("Random_str", $('#RS').val());
 		            },
@@ -192,7 +216,7 @@ func init() {
 		                var data_text = JSON.stringify(res.data, null, 4);
 		                var params_all_text = JSON.stringify(res.request.params, null, 4);
 		                var params_needed_text = JSON.stringify(res.request.needed, null, 4);
-		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;font-weight:bold;">请求返回状态 ：' + res.code + '<br/><hr/>返回错误消息 ：' + res.message + '('+ res.message_detail + ')<br/><hr/>有效请求参数：<br/>' + params_needed_text + '<br/><hr/>所有请求参数：<br/>' + params_all_text + '<br/><hr/>返回数据：<br/>' + (data_text ? data_text : 'Empty . . . .') + '</pre>');
+		                $("#json_output").html('<pre style="white-space:pre-wrap;word-wrap:break-word;font-weight:bold;">请求返回状态 ：' + res.code + '<br/><hr/>请求返回消息 ：' + res.message + (res.message_detail ? ('('+res.message_detail+')') : '') + '<br/><hr/>有效请求参数：<br/>' + params_needed_text + '<br/><hr/>所有请求参数：<br/>' + params_all_text + '<br/><hr/>返回数据：<br/>' + (data_text ? data_text : 'Empty . . . .') + '</pre>');
 		                $("#json_output").show();
 		            },
 		            error: function (error) {
@@ -200,13 +224,18 @@ func init() {
 		                $("#json_output").show();
 		            }
 		        }
+				if ($('#api_info .api_url').data('route').indexOf("common/upload/{path}") > -1) {
+					req_obj.contentType = false;
+				}
 				var data = get_data();
 				if(method.toUpperCase() == "POST") {
-		            req_obj.data = JSON.stringify(data);
+					req_obj.data = data;
+					if ($('#api_info .api_url').data('route').indexOf("common/upload/{path}") == -1) {
+			            req_obj.data = JSON.stringify(data);
+					}
 		            req_obj.processData = false;
 				}else{
 					req_obj.data = data;
-					req_obj.dataType = 'json';
 				}
 		        $.ajax(req_obj)
 		    })

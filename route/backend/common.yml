@@ -1,0 +1,14 @@
+###################
+# 模块说明
+name: 公共相关
+# 模块路由
+list:
+  - name: 上传接口
+    route: common/upload/{path}
+    need_auth: true
+    with_platform: true
+    method: post
+    handler: common.upload
+    params: []
+    return:
+      url: 服务器文件地址

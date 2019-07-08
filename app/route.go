@@ -25,7 +25,7 @@ func (s String) R(key string) (T, error) {
 		for _, dir := range String("route").Scan("", true) {
 			result[dir] = make(map[string]map[string]interface{})
 			v.AddConfigPath("route/" + dir)
-			for _, file := range String("route/"+dir).Scan(".yml", false) {
+			for _, file := range String("route/" + dir).Scan(".yml", false) {
 				rname := strings.Replace(file, ".yml", "", -1)
 				v.SetConfigName(rname)
 				if err := v.ReadInConfig(); err != nil {
@@ -59,7 +59,7 @@ func (s String) RH() {
 		if s.ToString() != module {
 			continue
 		}
-		for _, file := range String("route/"+module).Scan(".yml", false) {
+		for _, file := range String("route/" + module).Scan(".yml", false) {
 			routes, _ := String(module).R(strings.Replace(file, ".yml", "", -1))
 			if routes.IsValid() {
 				for _, item := range TValue(routes).(map[string]interface{})["list"].([]interface{}) {
@@ -79,6 +79,13 @@ func (s String) RH() {
 					}
 					handler := route["handler"].(string)
 					Mux.HandleFunc(routeStr, func(rep http.ResponseWriter, req *http.Request) {
+						rep.Header().Set("Access-Control-Allow-Origin", "*")
+						rep.Header().Set("Access-Control-Max-Age", "10000000")
+						rep.Header().Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
+						rep.Header().Set("Access-Control-Allow-Headers", "Content-Type,Debug,Token,Random_str")
+						if req.Method == http.MethodOptions {
+							return
+						}
 						defer PHandler()
 						// 初始访问
 						h := NT(rep, req)
@@ -95,11 +102,15 @@ func (s String) RH() {
 						}
 						//
 						h.Module = module
+						// 上传参数
+						if strings.HasSuffix(routeStr, "common/upload/{path}") {
+							params = append(params, map[string]interface{}{"field": "file", "rules": []interface{}{"must", "file"}, "label": "上传文件"})
+						}
 						// 参数校验
 						h.Verify(params, module, needAuth)
 						// 业务实现
 						h.RHH(String(req.URL.Path).Split("/")[1], handler)
-					}).Methods(method)
+					}).Methods(method, "OPTIONS")
 				}
 			}
 		}

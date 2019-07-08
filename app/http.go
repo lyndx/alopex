@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/fwhezfwhez/jwt"
+	"github.com/gorilla/mux"
 )
 
 type Http struct {
@@ -24,21 +25,7 @@ type Http struct {
 
 // 创建Http实例
 func NT(rep http.ResponseWriter, req *http.Request) *Http {
-	// 跨域处理
-	if origin := req.Header.Get("Origin"); origin != "" {
-		req.Header.Set("Access-Control-Allow-Origin", "*")
-		req.Header.Set("Access-Control-Max-Age", "172800")
-		req.Header.Set("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE")
-		req.Header.Set("Access-Control-Allow-Headers", "Authorization,Accept-Language,Cache-Control,Content-Type")
-		req.Header.Set("Access-Control-Expose-Headers", "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type")
-	}
-	if req.Method == "OPTIONS" {
-		rep.Header().Set("content-type", "text/plain")
-		rep.Write([]byte("Options Request!"))
-		panic("EOF")
-	} else {
-		rep.Header().Set("content-type", "application/json")
-	}
+	rep.Header().Set("content-type", "application/json")
 	//
 	h := new(Http)
 	h.Rep = rep
@@ -156,6 +143,14 @@ func (h *Http) checkField(field interface{}, rules []string) (interface{}, bool,
 // JWT认证
 func (h *Http) JwtAuth(module string) {
 	params := *(*h).Params
+	// 是否为接口调试
+	isDebug := false
+	if _, ok := params["debug"]; ok && (params["debug"] == "true") {
+		isDebug = true
+	}
+	if _, ok := params["token"]; (!ok) || (params["token"] == "") || (RT(params["token"]).String() != "string") {
+		h.Output(401, "认证失败", "认证Token不能为空")
+	}
 	// 获取认证Token字符串
 	if _, ok := params["token"]; (!ok) || (params["token"] == "") || (RT(params["token"]).String() != "string") {
 		h.Output(401, "认证失败", "认证Token不能为空")
@@ -199,7 +194,7 @@ func (h *Http) JwtAuth(module string) {
 	if (e != nil) || (user == nil) {
 		h.Output(401, "认证失败", "认证用户信息获取失败")
 	}
-	if user.(map[string]string)["token"] != tokenStr {
+	if (!isDebug) && (user.(map[string]string)["token"] != tokenStr) {
 		h.Output(401, "认证失败", "认证用户Token校验失败")
 	}
 }
@@ -235,6 +230,12 @@ func (h *Http) Verify(configs []interface{}, module string, needAuth bool) {
 			}
 		}
 		result[field] = value
+	}
+	if platform, ok := mux.Vars(h.Req)["platform"]; ok {
+		result["platform"] = platform
+	}
+	if path, ok := mux.Vars(h.Req)["path"]; ok {
+		result["path"] = path
 	}
 	(*h.Params)["__"] = result
 	if !isTrue {
@@ -321,12 +322,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PA[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PA[k] = fitems
 				} else if k == "content-type" {
@@ -341,12 +342,12 @@ func (h *Http) Output(code int, args ...interface{}) {
 				vv := TT(v, true)
 				if vv.IsFile(false) {
 					f := v.(*multipart.FileHeader)
-					PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
+					PB[k] = map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")}
 				} else if vv.IsFile(true) {
 					fs := v.([]*multipart.FileHeader)
 					fitems := make([]map[string]interface{}, 0)
 					for _, f := range fs {
-						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size)/float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
+						fitems = append(fitems, map[string]interface{}{"name": f.Filename, "size": Float(float64(f.Size) / float64(1024)).ToString(2) + "KB", "type": f.Header.Get("Content-Type")})
 					}
 					PB[k] = fitems
 				} else if k == "content-type" {

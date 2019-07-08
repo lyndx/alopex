@@ -10,7 +10,7 @@
                 <div class="input-group-btn">
                     <button class="btn btn-default fix-border">选择类型</button>
                 </div>
-                <select data-placeholder="选择类型" class="chosen-select form-control">
+                <select class="chosen-select form-control" data-placeholder="选择类型">
                     <option value="">全部</option>
                     <option value="0">待审核</option>
                     <option value="1">已通过</option>
@@ -38,9 +38,9 @@
                         <li><a href="#">登录时间</a></li>
                     </ul>
                 </div>
-                <input id="date-start" type="text" class="form-control form-date" placeholder="开始日期" disabled/>
+                <input id="date-start" type="text" class="form-control form-daterange" placeholder="开始日期" disabled/>
                 <span class="input-group-addon fix-border">-</span>
-                <input id="date-end" type="text" class="form-control form-date" placeholder="结束日期" disabled/>
+                <input id="date-end" type="text" class="form-control form-daterange" placeholder="结束日期" disabled/>
             </div>
             <div id="btns-dosearch" class="btn input-group">
                 <button class="btn btn-primary">搜索</button>
@@ -50,73 +50,81 @@
     <div class="datagrid-container"></div>
     <div class="pager"></div>
 </div>
-<script>
-	$('#body-table .btn-toolbar .dropdown-menu').on('click', 'li', function () {
-		var self = $(this), a = self.find('a'), input = self.parent().parent().parent().find('input'), btn = self.parent().prev();
-		self.addClass('active').siblings().removeClass('active');
-		btn.html(a.text() + '&nbsp;<span class="caret"></span>');
-		input.data('field', a.data('field')).removeAttr('disabled');
-	});
-	$('#body-table .chosen-select').chosen({
-		no_results_text: '没有找到',
-		disable_search_threshold: 10,
-		search_contains: true
-	});
-	$('#body-table .form-date').datetimepicker({
-		language: "zh-CN",
-		weekStart: 1,
-		todayBtn: 1,
-		autoclose: 1,
-		todayHighlight: 1,
-		startView: 2,
-		minView: 2,
-		forceParse: 0,
-		format: "yyyy-mm-dd"
-	});
-	_.list = [
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-		{time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
-	];
-	$('#body-table').datagrid({
-		height: "page",
-		dataSource: {
-			cols: [
-				{label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true},
-				{label: '英雄', name: 'hero', width: 'auto'},
-				{label: '动作', name: 'action', width: 'auto'},
-				{label: '物品', name: 'item', width: 'auto'},
-				{label: '状态', name: 'status', width: 'auto', minWidth: 200, html: true},
-			],
-			data: _.list,
-		},
-		configs: {
-			C5: {
-				valueOperator: {
-					getter: function (dataValue, cell) {
-						return '<div class="switch switch-inline" data-index="' + cell.rowIndex + '" style="margin-top:-5px;"><input type="checkbox" ' + (dataValue > 0 ? 'checked' : '') + ' onchange="var status=$(this).is(\':checked\')?1:0;_.list[' + (cell.rowIndex - 1) + '][\'status\']=status;$(this).next().text(status>0?\'开启\':\'关闭\')"><label>' + (dataValue > 0 ? '开启' : '关闭') + '</label></div>';
-					}
-				}
-			}
-		},
-		states: {
-			fixedTopUntil: 0,
-			fixedLeftUntil: 1,
-			fixedRightFrom: 3,
-			pager: {page: 1, recPerPage: 20}
-		},
-		sortable: true,
-		hoverCell: true,
-		checkable: true,
-		checkByClickRow: false,
-	});
-	var myDataGrid = $('#body-table').data('zui.datagrid');
-	myDataGrid.showMessage('haha', 'success');
 
+<script>
+    let otable = $('#body-table');
+    otable.find('.chosen-select').chosen();
+    otable.find('.btn-toolbar .dropdown-menu').on('click', 'li', function () {
+        let self = $(this);
+        let [a, input, btn] = [self.find('a'), self.parent().parent().parent().find('input'), self.parent().prev()];
+        self.addClass('active').siblings().removeClass('active');
+        btn.html(a.text() + '&nbsp;<span class="caret"></span>');
+        input.data('field', a.data('field')).removeAttr('disabled');
+    });
+    //
+    let daterange = otable.find('.form-daterange');
+    if (daterange.length > 0) {
+        table['daterange'] = {};
+        $.each(daterange, function (i, tag) {
+            let id = $(tag).attr('id');
+            if (id) {
+                table['daterange'][id] = daterange.datetimepicker({
+                    language: "zh-CN",
+                    weekStart: 1,
+                    todayBtn: 1,
+                    autoclose: 1,
+                    todayHighlight: 1,
+                    startView: 2,
+                    minView: 2,
+                    forceParse: 0,
+                    format: "yyyy-mm-dd"
+                });
+            }
+        });
+    }
+    _.list = [
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 1},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+        {time: (new Date()).getTime(), hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4], action: '滚', item: '蛋', status: 0},
+    ];
+    otable.datagrid({
+        height: "page",
+        dataSource: {
+            cols: [
+                {label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true},
+                {label: '英雄', name: 'hero', width: 'auto'},
+                {label: '动作', name: 'action', width: 'auto'},
+                {label: '物品', name: 'item', width: 'auto'},
+                {label: '状态', name: 'status', width: 'auto', minWidth: 200, html: true},
+            ],
+            data: _.list,
+        },
+        configs: {
+            C5: {
+                valueOperator: {
+                    getter: function (dataValue, cell) {
+                        return '<div class="switch switch-inline" data-index="' + cell.rowIndex + '" style="margin-top:-5px;"><input type="checkbox" ' + (dataValue > 0 ? 'checked' : '') + ' onchange="var status=$(this).is(\':checked\')?1:0;_.list[' + (cell.rowIndex - 1) + '][\'status\']=status;$(this).next().text(status>0?\'开启\':\'关闭\')"><label>' + (dataValue > 0 ? '开启' : '关闭') + '</label></div>';
+                    }
+                }
+            }
+        },
+        states: {
+            fixedTopUntil: 0,
+            fixedLeftUntil: 1,
+            fixedRightFrom: 3,
+            pager: {page: 1, recPerPage: 20}
+        },
+        sortable: true,
+        hoverCell: true,
+        checkable: true,
+        checkByClickRow: false,
+    });
+    let grid = otable.data('zui.datagrid');
+    grid.showMessage('haha', 'success');
 </script>
