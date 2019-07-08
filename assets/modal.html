@@ -1,155 +1,104 @@
-<div id="body-modal" class="modal-content">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">
-            <span aria-hidden="true">×</span>
-            <span class="sr-only">关闭</span>
+<div id='body-modal' class='modal-content'>
+    <div class='modal-header'>
+        <button type='button' class='close' data-dismiss='modal'>
+            <span aria-hidden='true'>×</span><span class='sr-only'>关闭</span>
         </button>
-        <h4 class="modal-title"></h4>
+        <h4 class='modal-title'></h4>
     </div>
-    <div class="modal-body">
-
-        <div class="panel-group" id="accordionPanels" aria-multiselectable="true">
-            <div class="panel panel-default">
-                <div class="panel-heading" id="headingOne">
-                    <h4 class="panel-title">
-                        <a data-toggle="collapse" data-parent="#accordionPanels" href="#collapseOne">折叠面板 1</a>
+    <div class='modal-body'>
+        <div id='cards' class='panel-group' aria-multiselectable='true'>
+            <div class='panel panel-default'>
+                <div class='panel-heading'>
+                    <h4 class='panel-title'>
+                        <a data-toggle='collapse' data-parent='#cards' href='#card_1'>第一条记录</a>
                     </h4>
                 </div>
-                <div id="collapseOne" class="panel-collapse collapse in">
-                    <div class="panel-body">
-
-                        <div class="form-group"
-                             f-name="username"
-                             f-must="true" f-type="input"
-                             f-regex="^[a-z0-9\-_]{6,12}$ i">
-                            <label>用户名</label>
-                            <input type="text" class="form-control"/>
+                <div id='card_1' class='panel-collapse collapse in'>
+                    <div class='panel-body'>
+                        <div class='form-group' f-name='username' f-must='true' f-type='input' f-regex='^[a-z0-9\-_]{6,12}$ i'>
+                            <label>用户名</label><input type='text' class='form-control' placeholder='请输入用户名'/>
                         </div>
-
-                        <div class="form-group"
-                             f-name="password"
-                             f-must="true" f-type="textarea"
-                             f-regex="^[a-z0-9\-_]{6,12}$ i">
-                            <label>密码</label>
-                            <textarea class="form-control"></textarea>
+                        <div class='form-group' f-name='password' f-must='true' f-type='input' f-regex='^[a-z0-9\-_]{6,12}$ i'>
+                            <label>密码</label><input type='text' class='form-control' placeholder='请输入密码'/>
                         </div>
-
-                        <div class="form-group"
-                             f-name="email"
-                             f-must="true" f-type="input"
-                             f-regex="^[a-z0-9\-_]{6,12}$ i">
-                            <label>邮箱</label>
-                            <input type="text" class="form-control"/>
+                        <div class='form-group' f-name='email' f-must='true' f-type='input' f-regex='^[a-z0-9\-_]{6,12}$ i'>
+                            <label>邮箱</label><input type='text' class='form-control' placeholder='请输入邮箱'/>
                         </div>
-
-
-                        <div class="form-group"
-                             f-name="daterange"
-                             f-must="true" f-type="daterange">
+                        <div class='form-group' f-name='daterange' f-must='true' f-type='daterange'>
                             <label>日期</label>
-                            <div class="input-group form-control">
-                                <input id="date_start" type="text" class="form-control form-daterange" placeholder="开始日期">
-                                <span class="input-group-addon fix-border">-</span>
-                                <input id="date_end" type="text" class="form-control form-daterange" placeholder="结束日期">
+                            <div class='input-group form-control'>
+                                <input id='date_start' type='text' class='form-control form-daterange' placeholder='开始日期'>
+                                <span class='input-group-addon fix-border'>-</span>
+                                <input id='date_end' type='text' class='form-control form-daterange' placeholder='结束日期'>
                             </div>
                         </div>
-
-                        <div class="form-group"
-                             f-name="file"
-                             f-must="true" f-type="file">
+                        <div class='form-group' f-name='file' f-must='true' f-type='file'>
                             <label>文件</label>
-                            <div id="logo" class="uploader form-control" data-ride="uploader">
-                                <div class="uploader-message text-center">
-                                    <div class="content"></div>
-                                    <button type="button" class="close">×</button>
+                            <div id='logo' class='uploader form-control' data-ride='uploader'>
+                                <div class='uploader-message text-center'>
+                                    <div class='content'></div>
+                                    <button type='button' class='close'>×</button>
                                 </div>
-                                <div class="uploader-files file-list file-list-lg" data-drag-placeholder="请拖拽文件到此处"></div>
-                                <div class="uploader-actions">
-                                    <div class="uploader-status pull-right text-muted"></div>
-                                    <button type="button" class="btn btn-link uploader-btn-browse"><i class="icon icon-plus"></i> 选择文件</button>
-                                    <button type="button" class="btn btn-link uploader-btn-start"><i class="icon icon-cloud-upload"></i> 开始上传</button>
+                                <div class='uploader-files file-list file-list-lg' data-drag-placeholder='请拖拽文件到这里'></div>
+                                <div class='uploader-actions'>
+                                    <div class='uploader-status pull-right text-muted'></div>
+                                    <a class='btn btn-link uploader-btn-browse'><i class='icon-plus'></i>&nbsp;选择文件</a>
+                                    <a class='btn btn-link uploader-btn-start'><i class='icon-cloud-upload'></i>&nbsp;开始上传</a>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-group"
-                             f-name="switch"
-                             f-must="true" f-type="switch">
+                        <div class='form-group' f-name='switch' f-must='true' f-type='switch'>
                             <label>开关</label>
-                            <div class="form-control">
-                                <div class="switch">
-                                    <input type="checkbox">
-                                    <label>夜间模式</label>
-                                </div>
+                            <div class='form-control'>
+                                <div class='switch switch-inline'><input type='checkbox'><label>夜间模式</label></div>
                             </div>
                         </div>
-
-                        <div class="form-group"
-                             f-name="radio"
-                             f-must="true" f-type="radio">
+                        <div class='form-group' f-name='radio' f-must='true' f-type='radio'>
                             <label>单选</label>
-                            <div class="form-control">
-                                <div class="radio-primary"><input type="radio" name="x"><label>选项一</label></div>
-                                <div class="radio-primary"><input type="radio" name="x" checked><label>选项二</label></div>
-                                <div class="radio-primary"><input type="radio" name="x"><label>选项三</label></div>
-                                <div class="radio-primary"><input type="radio" name="x" disabled="disabled"><label>禁用</label></div>
+                            <div class='form-control'>
+                                <div class='radio-primary'><input type='radio' name='x' value='1'><label>选项一</label></div>
+                                <div class='radio-primary'><input type='radio' name='x' value='2'><label>选项二</label></div>
+                                <div class='radio-primary'><input type='radio' name='x' value='3'><label>选项三</label></div>
                             </div>
                         </div>
-
-                        <div class="form-group"
-                             f-name="checkbox"
-                             f-must="true" f-type="checkbox">
+                        <div class='form-group' f-name='checkbox' f-must='true' f-type='checkbox'>
                             <label>多选</label>
-                            <div class="form-control">
-                                <div class="checkbox-primary"><input type="checkbox"><label>未选中</label></div>
-                                <div class="checkbox-primary"><input type="checkbox"><label>选中</label></div>
-                                <div class="checkbox-primary"><input type="checkbox" disabled><label>禁用</label></div>
+                            <div class='form-control'>
+                                <div class='checkbox-primary'><input type='checkbox' value='0'><label>未选中</label></div>
+                                <div class='checkbox-primary'><input type='checkbox' value='1'><label>选中</label></div>
                             </div>
                         </div>
-
-                        <div class="form-group"
-                             f-name="select"
-                             f-must="true" f-type="select">
+                        <div class='form-group' f-name='select' f-must='true' f-type='select'>
                             <label>下拉</label>
-                            <div class="form-control">
-                                <select id="type" data-placeholder="选择" class="chosen-select form-control">
-                                    <option value="strawberries">草莓</option>
-                                    <option value="apple">苹果</option>
-                                    <option value="orange">橙子</option>
-                                    <option value="cherry">樱桃</option>
-                                    <option value="banana">香蕉</option>
-                                    <option value="figs">无花果</option>
-                                </select>
-                            </div>
+                            <select id='type' data-placeholder='选择' class='chosen-select form-control' multiple>
+                                <option value=""></option>
+                                <option value='strawberries'>草莓</option>
+                                <option value='apple'>苹果</option>
+                                <option value='orange'>橙子</option>
+                                <option value='cherry'>樱桃</option>
+                                <option value='banana'>香蕉</option>
+                                <option value='figs'>无花果</option>
+                            </select>
                         </div>
-
-                        <div class="form-group"
-                             f-name="editor"
-                             f-must="true" f-type="editor">
+                        <div class='form-group' f-name='editor' f-must='true' f-type='editor'>
                             <label>编辑器</label>
-                            <div id="editor" class="form-control form-editor"></div>
+                            <div id='editor' class='form-control form-editor'></div>
                         </div>
-
-                        <div class="footer">
-                            <button type="button" class="btn btn-default">重置</button>
-                            <button type="button" class="btn btn-primary form-submit">保存</button>
-                        </div>
+                        <button type='button' class='btn btn-primary form-submit'>保存</button>
                     </div>
                 </div>
             </div>
-            <div class="panel panel-default">
-                <div class="panel-heading" id="headingTwo">
-                    <h4 class="panel-title">
-                        <a class="collapsed" data-toggle="collapse" data-parent="#accordionPanels" href="#collapseTwo">折叠面板 2</a>
+            <div class='panel panel-default'>
+                <div class='panel-heading' id='headingTwo'>
+                    <h4 class='panel-title'>
+                        <a class='collapsed' data-toggle='collapse' data-parent='#accordionPanels' href='#collapseTwo'>折叠面板
+                            2</a>
                     </h4>
                 </div>
-                <div id="collapseTwo" class="panel-collapse collapse">
-                    <div class="panel-body">
-
-                    </div>
+                <div id='collapseTwo' class='panel-collapse collapse'>
+                    <div class='panel-body'></div>
                 </div>
             </div>
         </div>
-
-
     </div>
 </div>

@@ -1,122 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <title>Alopex管理系统</title>
-    <link rel="stylesheet" href="assets/css/zui.min.css"/>
-    <link rel="stylesheet" href="assets/css/zui-theme.css"/>
-    <link rel="stylesheet" href="assets/css/alopex.css"/>
-
-    <script src="assets/lib/jquery/jquery.js"></script>
-    <script src="assets/js/zui.min.js"></script>
-    <script src="assets/js/alopex.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/tabs/zui.tabs.min.css"/>
-    <script src="assets/lib/tabs/zui.tabs.min.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/datetimepicker/datetimepicker.min.css">
-    <script src="assets/lib/datetimepicker/datetimepicker.min.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/datagrid/zui.datagrid.min.css"/>
-    <script src="assets/lib/datagrid/zui.datagrid.min.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/chosen/chosen.min.css">
-    <script src="assets/lib/chosen/chosen.min.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/wangeditor/wangEditor.min.css">
-    <script src="assets/lib/wangeditor/wangEditor.min.js"></script>
-
-    <link rel="stylesheet" href="assets/lib/uploader/zui.uploader.min.css">
-    <script src="assets/lib/uploader/zui.uploader.min.js"></script>
-
-</head>
-
-<body>
-
-<!-- 顶部导航 -->
-<nav id="header" class="navbar navbar-inverse" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#header-box"><span class="sr-only">切换导航</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button>
-            <a class="navbar-brand" x-data="page_header" x-href="home_url"><img x-data="page_header" x-src="logo_image"></a>
-        </div>
-        <div id="header-box" class="collapse navbar-collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="javascript:void(0);" class="bg-brown" x-data="page_header" x-href="userinfo_url">个人中心</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li><a href="javascript:void(0);" class="bg-warning">银商入款<span class="label label-badge">12</span></a></li>
-                <li><a href="javascript:void(0);" class="bg-success">入款申请<span class="label label-badge">12</span></a></li>
-                <li><a href="javascript:void(0);" class="bg-danger">出款申请<span class="label label-badge">12</span></a></li>
-                <li><a href="javascript:void(0);" class="bg-purple" x-data="page_header" x-href="refresh_url" class="bg-default">刷新</a></li>
-                <li class="dropdown">
-                    <a href="#" class="dropdown-toggle bg-green" data-toggle="dropdown">更多&nbsp;<b class="caret"></b></a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="javascript:void(0);" x-data="page_header" x-href="clean_url"><i class="icon-trash"></i>&nbsp;清理缓存</a></li>
-                        <li><a href="javascript:void(0);" x-data="page_header" x-href="logout_url"><i class="icon-signout"></i>&nbsp;退出登录</a></li>
+<html lang='en'>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width,initial-scale=1.0'>
+        <title>Alopex管理系统</title>
+        <link rel='stylesheet' href='css/zui.min.css'/>
+        <link rel='stylesheet' href='css/zui-theme.css'/>
+        <link rel='stylesheet' href='css/alopex.css'/>
+        <script src='lib/jquery/jquery.js'></script>
+        <script src='js/zui.min.js'></script>
+        <script src='js/alopex.js'></script>
+        <link rel='stylesheet' href='lib/tabs/zui.tabs.min.css'/>
+        <script src='lib/tabs/zui.tabs.min.js'></script>
+        <link rel='stylesheet' href='lib/datetimepicker/datetimepicker.min.css'>
+        <script src='lib/datetimepicker/datetimepicker.min.js'></script>
+        <link rel='stylesheet' href='lib/datagrid/zui.datagrid.min.css'/>
+        <script src='lib/datagrid/zui.datagrid.min.js'></script>
+        <link rel='stylesheet' href='lib/chosen/chosen.min.css'>
+        <script src='lib/chosen/chosen.min.js'></script>
+        <link rel='stylesheet' href='lib/wangeditor/wangEditor.min.css'>
+        <script src='lib/wangeditor/wangEditor.min.js'></script>
+        <link rel='stylesheet' href='lib/uploader/zui.uploader.min.css'>
+        <script src='lib/uploader/zui.uploader.min.js'></script>
+    </head>
+    <body>
+        <!-- 顶部导航 -->
+        <nav id='header' class='navbar navbar-inverse' role='navigation'>
+            <div class='container-fluid'>
+                <div class='navbar-header'>
+                    <button data-toggle='collapse' data-target='#header-box' class='navbar-toggle'>
+                        <span class='sr-only'>切换导航</span><span class='icon-bar'></span><span class='icon-bar'></span><span class='icon-bar'></span>
+                    </button>
+                    <a x-data='page' x-href='home_url' class='navbar-brand'><img x-data='page' x-src='logo_image'/></a>
+                </div>
+                <div id='header-box' class='collapse navbar-collapse'>
+                    <ul class='nav navbar-nav'>
+                        <li><a x-data='page' x-href='userinfo_url' class='bg-brown'>个人中心</a></li>
                     </ul>
-                </li>
-
-            </ul>
-
+                    <ul class='nav navbar-nav navbar-right'>
+                        <li><a class='bg-warning'>银商入款<span class='label label-badge'>12</span></a></li>
+                        <li><a class='bg-success'>入款申请<span class='label label-badge'>12</span></a></li>
+                        <li><a class='bg-danger'>出款申请<span class='label label-badge'>12</span></a></li>
+                        <li><a x-data='page' x-href='refresh_url' class='bg-purple'>刷新</a></li>
+                        <li class='dropdown'>
+                            <a class='dropdown-toggle bg-green' data-toggle='dropdown'>更多&nbsp;<b class='caret'></b></a>
+                            <ul class='dropdown-menu' role='menu'>
+                                <li>
+                                    <a x-data='page' x-href='clean_url'><i class='icon-trash'></i>&nbsp;清理缓存</a>
+                                </li>
+                                <li>
+                                    <a x-data='page' x-href='logout_url'><i class='icon-signout'></i>&nbsp;退出登录</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- 左侧导航 -->
+        <ul id='menu' class='tree tree-menu' data-ride='tree'>
+            <li><a href='#'><i class='icon icon-user'></i>内容管理</a></li>
+            <li>
+                <a href='#'><i class='icon icon-time'></i>系统管理</a>
+                <ul>
+                    <li><a href='#'>配置管理</a></li>
+                    <li><a href='#'>日志管理</a></li>
+                    <li><a href='#'>数据管理</a></li>
+                    <li><a href='#'>缓存管理</a></li>
+                </ul>
+            </li>
+            <li><a href='#'><i class='icon icon-trash'></i>游戏管理</a></li>
+            <li><a href='#'><i class='icon icon-list-ul'></i>活动管理</a></li>
+            <li>
+                <a href='#'><i class='icon icon-tasks'></i>财务管理</a>
+                <ul>
+                    <li><a href='#'><i class='icon icon-play-sign'></i>报表管理</a></li>
+                    <li><a href='#'><i class='icon icon-ok-sign'></i>流水管理</a></li>
+                </ul>
+            </li>
+        </ul>
+        <!-- 页面主体 -->
+        <div id='body-box' class='panel panel-default'>
+            <div class='panel-body'>
+                <div id='body-tabs' class='tabs'></div>
+            </div>
+            <!-- 页脚部分 -->
+            <div x-data='page' id='body-footer' class='panel-footer'>{{page.copyright}}</div>
         </div>
-    </div>
-</nav>
-
-<!-- 左侧导航 -->
-<ul id="menu" class="tree tree-menu" data-ride="tree">
-    <li><a href="#"><i class="icon icon-user"></i>内容管理</a></li>
-    <li>
-        <a href="#"><i class="icon icon-time"></i>系统管理</a>
-        <ul>
-            <li><a href="javascript:void(0);">配置管理</a></li>
-            <li><a href="javascript:void(0);">日志管理</a></li>
-            <li><a href="javascript:void(0);">数据管理</a></li>
-            <li><a href="javascript:void(0);">缓存管理</a></li>
-        </ul>
-    </li>
-    <li><a href="#"><i class="icon icon-trash"></i>游戏管理</a></li>
-    <li><a href="#"><i class="icon icon-list-ul"></i>活动管理</a></li>
-    <li>
-        <a href="#"><i class="icon icon-tasks"></i>财务管理</a>
-        <ul>
-            <li><a href="javascript:void(0);"><i class="icon icon-play-sign"></i>报表管理</a></li>
-            <li><a href="javascript:void(0);"><i class="icon icon-ok-sign"></i>流水管理</a></li>
-        </ul>
-    </li>
-</ul>
-
-<!-- 页面主体 -->
-<div id="body-box" class="panel panel-default">
-    <div class="panel-body">
-        <div id="body-tabs" class="tabs"></div>
-    </div>
-    <div id="body-footer" class="panel-footer" x-data="page_footer">{{page_footer.copyright}}</div>
-</div>
-
-<!--
-<input x-data="ss"
-       x-value="value"
-       x-placeholder="placeholder">
-<div x-data="ww"><p>{{ww.prop}}</p><div x-data="a">{{  a.x}}
-    <div x-list="aa"
-         x-template="<p>{{ name }}<input type='button' value='{{value }}'></p>"
-    ></div>
-</div></div>
-<div x-toggle="fds" x-class="dsds">CCC</div>
-<style>
-    .field{padding:10px;margin:20px;border:1px solid #ccc;}
-    .field.error{border:1px solid red;}
-    .field input{display:block;border:1px solid #ccc;outline:0;line-height:20px;}
-    .field .tip{display:none;}
-    .field.error .tip{display:block;color:red;font-size:12px;line-height:20px;}
-</style>
-<div class="field">
-    <input x-data="fd" x-placeholder="placeholder" x-value="value">
-    <p class="tip"></p>
-</div>
-<div x-html="xx"></div>
--->
-</body>
+    </body>
 </html>

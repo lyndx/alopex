@@ -36,6 +36,9 @@ body{position:relative;padding-top:40px;padding-left:180px;}
 #body-modal .modal-body .form-control{height:auto;min-height:37px;}
 #body-modal .modal-body .radio-primary,#body-modal .modal-body .checkbox-primary{display:inline-block;margin-right:10px;margin-top:5px;}
 
-.contextmenu{z-index:1000000000!important;}
+.uploader,.input-group,.form-editor{padding:2px;}
+.has-error .chosen-choices{border-color:#ea644a!important;}
+.contextmenu,.chosen-container{z-index:1000000000!important;}
 .chosen-container-single .chosen-drop{z-index:100000!important;}
 .load-indicator:after{z-index:10000000000;content:'\e97b';font-size:60px;width:60px;margin-left:-30px;margin-top:-40px;}
+.chosen-container-single .chosen-single abbr,.chosen-container-multi .chosen-choices li.search-choice .search-choice-close{line-height:18px!important;}
