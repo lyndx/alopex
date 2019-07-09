@@ -224,6 +224,20 @@ func (s String) GUID() string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(base64.URLEncoding.EncodeToString(b))))
 }
 
+// JSON转对象
+func (s String) J2O() (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	err := json.Unmarshal([]byte(s.ToString()), &result)
+	return result, err
+}
+
+// JSON转数组
+func (s String) J2A() ([]interface{}, error) {
+	result := make([]interface{}, 0)
+	err := json.Unmarshal([]byte(s.ToString()), &result)
+	return result, err
+}
+
 // 整数转字符串
 func (i Int) ToString() string {
 	return strconv.Itoa(int(i))

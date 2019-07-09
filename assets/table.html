@@ -1,16 +1,14 @@
 <div id='body-table' class='datagrid datagrid-borderless'>
     <div class='btn-toolbar'>
         <div class='btn-group'>
-            <div id='btns-todo' class='input-group'>
+            <div id='btn-todo' class='input-group'>
                 <button data-toggle='modal' data-size='fullscreen' data-type='ajax' data-url='./modal.html' class='btn btn-success'>
                     查看详情</button>
                 <button class='btn btn-info disabled'>编辑</button>
                 <button class='btn btn-danger disabled'>删除</button>
             </div>
-            <div id='btns-type' class='input-group'>
-                <div class='input-group-btn'>
-                    <button class='btn btn-default fix-border'>选择类型</button>
-                </div>
+            <div f-field='type' f-type='equal' class='filter-field input-group'>
+                <div class='input-group-btn'><button class='btn btn-default fix-border'>选择类型</button></div>
                 <select data-placeholder='选择类型' class='chosen-select form-control'>
                     <option value='*'>全部</option>
                     <option value='0'>待审核</option>
@@ -18,34 +16,25 @@
                     <option value='2'>已拒绝</option>
                 </select>
             </div>
-            <div id='btns-filter' class='input-group'>
-                <button class='btn btn-default'>模糊搜索</button>
-                <div class='input-group-btn fix-border'>
-                    <button data-toggle='dropdown' class='btn btn-default dropdown-toggle'>
-                        请选择&nbsp;<span class='caret'></span></button>
-                    <ul class='dropdown-menu pull-left' role='menu'>
-                        <li><a>用户名</a></li>
-                        <li><a>邮箱</a></li>
-                        <li><a>银行卡号</a></li>
-                    </ul>
-                </div>
-                <input disabled id='keywords' type='text' class='form-control'/>
+            <div f-field='status' f-type='equal' class='filter-field input-group'>
+                <div class='input-group-btn'><button class='btn btn-default fix-border'>选择状态</button></div>
+                <select data-placeholder='选择类型' class='chosen-select form-control'>
+                    <option value='*'>全部</option>
+                    <option value='1'>正常</option>
+                    <option value='0'>冻结</option>
+                </select>
             </div>
-            <div id='btns-daterange' class='input-group'>
-                <button class='btn btn-default'>时间区间</button>
-                <div class='input-group-btn fix-border'>
-                    <button data-toggle='dropdown' class='btn btn-default dropdown-toggle'>
-                        起止时间&nbsp;<span class='caret'></span></button>
-                    <ul class='dropdown-menu pull-left' role='menu'>
-                        <li><a>起止时间</a></li>
-                        <li><a>登录时间</a></li>
-                    </ul>
-                </div>
-                <input disabled id='date-start' type='text' class='form-control form-daterange' placeholder='开始日期'/>
-                <span class='input-group-addon fix-border'>-</span>
-                <input disabled id='date-end' type='text' class='form-control form-daterange' placeholder='结束日期'/>
+            <div f-field='username' f-type='like' class='filter-field input-group'>
+                <span class="input-group-addon">用户名</span><input type='text' class='form-control' placeholder='请输入用户名'/>
             </div>
-            <div id='btns-dosearch' class='input-group'><button class='btn btn-primary'>搜索</button></div>
+            <div f-field='email' f-type='like' class='filter-field input-group'>
+                <span class="input-group-addon">邮箱</span><input type='text' class='form-control' placeholder='请输入邮箱'/>
+            </div>
+            <div f-field='created_at' f-type='between' class='filter-range input-group'>
+                <span class="input-group-addon">注册时间</span><input type='text' class='form-control' placeholder='起始日期'/>
+                <span class='input-group-addon fix-border'>-</span><input type='text' class='form-control' placeholder='结束日期'/>
+            </div>
+            <div id='btn-dosearch' class='input-group'><button class='btn btn-primary'>搜索</button></div>
         </div>
     </div>
     <div class='datagrid-container'></div>
@@ -59,7 +48,7 @@
 		let [a, input, btn] = [self.find('a'), self.parent().parent().parent().find('input'), self.parent().prev()];
 		self.addClass('active').siblings().removeClass('active');
 		btn.html(a.text() + '&nbsp;<span class=\'caret\'></span>');
-		input.data('field', a.data('field')).removeAttr('disabled').attr('placeholder', '请输入'+a.text());
+		input.data('field', a.data('field')).removeAttr('disabled').attr('placeholder', '请输入' + a.text());
 	});
 	daterange = otable.find('.form-daterange');
 	if (daterange.length > 0) {
@@ -81,85 +70,81 @@
 			}
 		});
 	}
-	_.list = [
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 1,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 1,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 1,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-		{
-			time: (new Date()).getTime(),
-			hero: ['牛比', '傻叼', '二蛋', '逊球'][parseInt(Math.random() * 100 + '') % 4],
-			action: '滚',
-			item: '蛋',
-			status: 0,
-		},
-	];
 	otable.datagrid({
-		height: 'page',
+		height: otable.parent().height() - otable.find('.btn-toolbar').height() - 50,
 		dataSource: {
-			cols: [
-				{label: '编号', name: 'time', width: 'auto', valueType: 'gametime', sort: true},
-				{label: '英雄', name: 'hero', width: 'auto'},
-				{label: '动作', name: 'action', width: 'auto'},
-				{label: '物品', name: 'item', width: 'auto'},
-				{label: '状态', name: 'status', width: 'auto', minWidth: 200, html: true},
-			],
-			data: _.list,
+			cols: list_data.cols,
+			remote: function (params) {
+				let ftags = otable.find('.filter-field,.filter-range');
+				let [filter, orderby] = [{}, []];
+				if (ftags.length > 0) {
+					$.each(ftags, function (i, tag) {
+						let otag = $(tag);
+						let [field, type, value] = [otag.attr('f-field'), otag.attr('f-type'), ''];
+						if (field && ($.inArray(type, ['equal', 'like', 'between']) > -1)) {
+							if (otag.find('select').length > 0) {
+								value = otag.find('select').val().trim();
+								value = ('*' === value) ? '' : value;
+							} else {
+								let inputs = otag.find('[type=text]');
+								if (inputs.length === 1) {
+									value = inputs.val().trim();
+								} else if (inputs.length === 2) {
+									let [a, b] = [$(inputs[0]).val().trim(), $(inputs[1]).val().trim()];
+									if (a && b) {
+										value = [a, b];
+									}
+								}
+							}
+							if ('' !== value) {
+								filter[field] = {'type': type, 'value': value};
+							}
+						}
+					});
+				}
+				if (!$.isEmptyObject(filter)) {
+					filter = JSON.stringify(filter);
+				}
+				if (params.order && params.sortBy) {
+					orderby = JSON.stringify([
+						params.sortBy,
+						params.order,
+					]);
+				}
+				return {
+					url: list_data.url,
+					type: 'post',
+					dataType: 'json',
+					data: {
+						page: params.page,
+						size: params.recPerPage,
+						filter: filter,
+						orderby: orderby,
+					},
+					beforeSend: function (xhr) {
+						xhr.setRequestHeader('debug', 'true');
+						xhr.setRequestHeader('token', auth_info.token);
+						xhr.setRequestHeader('random_str', auth_info.random_str);
+					},
+				};
+			},
+			remoteConverter: function (data) {
+				let [code, message, pager] = [data.code, data.message, data.data.pager];
+				_.list = data.data.list;
+				return {
+					'result': code === 200 ? 'success' : 'no',
+					'data': _.list,
+					'message': message ? message : '',
+					'pager': {
+						'page': pager['page'],
+						'recTotal': pager['total_row'],
+						'recPerPage': pager['size'],
+					},
+				}
+			},
 		},
 		configs: {
-			C5: {
+			C6: {
 				valueOperator: {
 					getter: function (dataValue, cell) {
 						let [index, isChecked, label] = [cell.rowIndex - 1, dataValue > 0 ? 'checked' : '', dataValue > 0 ? '开启' : '关闭'];
@@ -170,15 +155,17 @@
 			},
 		},
 		states: {
-			fixedTopUntil: 0,
-			fixedLeftUntil: 1,
-			fixedRightFrom: 3,
-			pager: {page: 1, recPerPage: 20},
+			pager: {
+				page: 1,
+				recPerPage: 20,
+			},
+		},
+		onSelectRow: function (rowId, checked, selections) {
+			log('行', rowId, checked ? '选中了' : '取消选中了', selections);
 		},
 		sortable: true,
 		hoverCell: true,
 		checkable: true,
 		checkByClickRow: false,
 	});
-	otable.data('zui.datagrid').showMessage('加载成功！', 'success');
 </script>

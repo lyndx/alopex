@@ -11,17 +11,15 @@ body{position:relative;padding-top:40px;padding-left:180px;}
 #menu{position:absolute;left:0;top:40px;bottom:0;margin:0;width:180px;border-left:0;border-right:0;border-radius:0;}
 #body-box{height:100%;margin:0;position:relative;padding-bottom:41px;}
 #body-box>.panel-body{height:100%;overflow-y:auto;}
-#body-table{height:90%;}
 #body-footer{position:absolute;bottom:0;left:0;right:0;text-indent:10px;}
 #body-table>.btn-toolbar{margin-bottom:2px;position:relative;z-index:10000;}
 #body-table>.btn-toolbar button,#body-table>.btn-toolbar input,#body-table>.btn-toolbar .chosen-container-single .chosen-single{height:37px;}
 #body-table>.btn-toolbar .chosen-container-single .chosen-single{line-height:27px;}
 #body-table>.btn-toolbar .chosen-container-single .chosen-drop{z-index:10000;}
-#body-table #btns-todo{padding:0;margin-top:2px;border:0;margin-right:5px;}
-#body-table #btns-type{width:260px;padding:0;margin-top:2px;border:0;margin-right:5px;position:relative;z-index:10000;}
-#body-table #btns-filter{width:280px;padding:0;margin-top:2px;border:0;margin-right:5px;position:relative;z-index:10000;}
-#body-table #btns-daterange{width:390px;padding:0;margin-top:2px;border:0;margin-right:5px;}
-#body-table #btns-dosearch{padding:0;margin-top:2px;border:0;}
+#body-table #btn-todo{padding:0;margin-top:2px;border:0;margin-right:5px;}
+#body-table .filter-field{width:180px;padding:0;margin-top:2px;border:0;margin-right:5px;position:relative;z-index:10000;}
+#body-table .filter-range{width:300px;padding:0;margin-top:2px;border:0;margin-right:5px;}
+#body-table #btn-dosearch{padding:0;margin-top:2px;border:0;}
 #body-table .pager{margin:5px 0;}
 
 #body-tabs{min-height:100%;}

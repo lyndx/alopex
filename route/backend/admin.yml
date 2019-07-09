@@ -1,0 +1,29 @@
+###################
+# 模块说明
+name: 管理员相关
+# 模块路由
+list:
+  - name: 管理员列表接口
+    route: admin/list
+    need_auth: true
+    with_platform: true
+    method: post
+    handler: admin.list
+    params:
+      - field: page
+        label: 页码
+        rules: [must, '^[1-9][0-9]*$']
+        default: '1'
+      - field: size
+        label: 单页条数
+        rules: [must, '^[1-9][0-9]*$']
+        default: '20'
+      - field: filter
+        label: 筛选数据
+        rules: [must]
+        default: '{}'
+      - field: orderby
+        label: 字段排序
+        rules: [must]
+        default: '[]'
+    return: []

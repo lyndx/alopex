@@ -14,7 +14,7 @@ func init() {
 }
 
 // 通过用户编号获取管理员信息
-func (u AdminService) GetAdminById(adminId string) (interface{}, error) {
+func (a AdminService) GetAdminById(adminId string) (interface{}, error) {
 	user, err := app.MD("main").Select("admins", true, "*", "id="+adminId)
 	if err != nil {
 		return nil, err
@@ -23,7 +23,7 @@ func (u AdminService) GetAdminById(adminId string) (interface{}, error) {
 }
 
 // 通过用户名获取管理员信息
-func (u AdminService) GetAdminByUsername(username string) (interface{}, error) {
+func (a AdminService) GetAdminByUsername(username string) (interface{}, error) {
 	user, err := app.MD("main").Select("admins", true, "*", "username='"+username+"'")
 	if err != nil {
 		return nil, err
@@ -32,10 +32,10 @@ func (u AdminService) GetAdminByUsername(username string) (interface{}, error) {
 }
 
 // 获取用户清单
-func (u UserService) GetAdminList(conditions map[string]string, page int, size int) (map[string]interface{}, error) {
+func (a AdminService) GetAdminList(conditions map[string]string, page int, size int) (map[string]interface{}, error) {
 	source, fields, where, groupby, orderby, limit := conditions["source"], conditions["fields"], conditions["where"], conditions["groupby"], conditions["orderby"], ""
 	if page > 0 {
-		limit = strconv.Itoa(page)
+		limit = strconv.Itoa((page - 1) * size)
 		if size > 0 {
 			limit += "," + strconv.Itoa(size)
 		} else {
@@ -63,7 +63,7 @@ func (u UserService) GetAdminList(conditions map[string]string, page int, size i
 		}
 		totalPage = int(math.Ceil(float64(totalRow) / float64(size)))
 	}
-	pager := map[string]int{"page": page, "size": size, "total_page": totalPage, "total_row": totalPage}
+	pager := map[string]int{"page": page, "size": size, "total_page": totalPage, "total_row": totalRow}
 	result := map[string]interface{}{"list": list, "pager": pager}
 	return result, nil
 }

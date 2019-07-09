@@ -15,13 +15,13 @@
 	String.prototype.trim = function (str) {
 		str = str + '';
 		str = (str !== undefined) || (str !== '') ? str : ' ';
-		return this.replace(new RegExp('^\\' + str + '+|\\' + str + '+$', 'g'), '', '');
+		return this.replace(new RegExp('^(\\' + str + ')+|(\\' + str + ')+$', 'g'), '', '');
 	};
 	String.prototype.ltrim = function (str) {
-		return this.replace(new RegExp('^\\' + str + '+', 'g'), '');
+		return this.replace(new RegExp('^(\\' + str + ')+', 'g'), '');
 	};
 	String.prototype.rtrim = function (str) {
-		return this.replace(new RegExp('\\' + str + '+$', 'g'), '');
+		return this.replace(new RegExp('(\\' + str + ')+$', 'g'), '');
 	};
 	String.prototype.hasPrefix = function (str) {
 		return this.indexOf(str) === 0;
@@ -151,10 +151,12 @@ $(document).ready(function () {
 		token: '',
 		random_str: '',
 	}
-	window.auth_info.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIxNTYyNTc0MDg2IiwicmFuZG9tX3N0ciI6Ijg5MjQ0OGU0OTIxMDRhYzNmYmZjMThjMjUyZTg1ODdhIiwidXNlcl9pZCI6IjEifQ==.E1ZtYMEBIUS26TKNaxSXWJMJPGleG8DAdWcDRfzIu+8=';
-	window.auth_info.random_str = '892448e492104ac3fbfc18c252e8587a';
+	window.auth_info.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIxNTYyNjg4MzMwIiwicmFuZG9tX3N0ciI6ImM2Yjg3YmNmN2M5M2M5OTBlZjRiMDk2ZWEwYjc1OTg5IiwidXNlcl9pZCI6IjEifQ==.Fy66uiZDihLTEJvO+NibJ1T7gpgIYdtvgoMEcpmN5Hw=';
+	window.auth_info.random_str = 'c6b87bcf7c93c990ef4b096ea0b75989';
 	// 列表筛选日期
 	window.filter_daterange = {};
+	// 列表页面数据
+	window.list_data = {};
 	// 弹框表单数据
 	window.form_data = {};
 	// 全局页面数据
@@ -182,6 +184,43 @@ $(document).ready(function () {
 				for (let id in filter_daterange) {
 					$('#' + id).datetimepicker('remove');
 				}
+				list_data = {
+					url: 'http://127.0.0.1:81/backend/qp/admin/list',
+					cols: [
+						{
+							label: '编号',
+							name: 'id',
+							width: 'auto',
+							sort: true,
+						},
+						{
+							label: '用户名',
+							name: 'username',
+							width: 'auto',
+						},
+						{
+							label: '密码',
+							name: 'password',
+							width: 'auto',
+						},
+						{
+							label: '邮箱',
+							name: 'email',
+							width: 'auto',
+						},
+						{
+							label: '注册时间',
+							name: 'created_at',
+							width: 150,
+						},
+						{
+							label: '状态',
+							name: 'status',
+							width: 100,
+							html: true,
+						},
+					],
+				};
 			}
 		},
 	});
