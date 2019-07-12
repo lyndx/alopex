@@ -34,7 +34,9 @@ body{position:relative;padding-top:40px;padding-left:180px;}
 #body-modal .modal-body div.form-control{height:auto;padding:4px;}
 #body-modal .modal-body .switch{margin-left:5px;}
 #body-modal .modal-body .radio-primary,#body-modal .modal-body .checkbox-primary{display:inline-block;margin-right:15px;margin-left:5px;margin-top:5px;}
+#cards>.panel{margin-top:-2px!important;margin-bottom:1px;}
 
+.panel-title>a:hover,.panel-title>a:active,.panel-title>a:link{text-decoration:none;}
 .uploader,.input-group,.form-editor{padding:0!important;margin:0!important;}
 .has-error .chosen-choices{border-color:#ea644a!important;}
 .contextmenu,.chosen-container{z-index:1000000000!important;}

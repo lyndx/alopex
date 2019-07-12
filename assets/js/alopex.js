@@ -9,8 +9,6 @@
         };
         return (part() + part() + '-' + part() + '-' + part() + '-' + part() + '-' + part() + part() + part());
     };
-    // 日志重构
-    (window.log = window.console.log) && (delete window.console);
     // 字串扩展
     String.prototype.trim = function (str) {
         str = str + '';
@@ -29,6 +27,67 @@
     String.prototype.hasSuffix = function (str) {
         let d = this.length - str.length;
         return (d >= 0 && this.lastIndexOf(str) === d);
+    };
+    String.prototype.isJSON = function () {
+        try {
+            let obj = JSON.parse(this);
+            return (typeof obj === 'object');
+        } catch (e) {
+            return false;
+        }
+    };
+    // 日志重构
+    (window.log = window.console.log) && (delete window.console);
+    // 弹层提示
+    window.alert = function (message, icon, type, act) {
+        if ((!message) || (message === '')) {
+            return;
+        }
+        let prop = {close: true, placement: 'center'};
+        if (icon) {
+            prop.icon = icon;
+        }
+        if (type) {
+            prop.type = type;
+        }
+        if (act && act.name && act.action) {
+            prop.actions = [act];
+        }
+        new $.zui.Messager(message, prop).show();
+    };
+    // 缓存处理
+    window.cache = function (type, key, value) {
+        if (!localStorage) {
+            alert('该浏览器不支持本地缓存功能，推荐使用谷歌Chrome浏览器', 'warning-sign', 'danger');
+            return;
+        }
+        if ((typeof key !== 'string') || (key.trim() === '')) {
+            return;
+        }
+        key = key.trim();
+        if ($.isPlainObject(value) || $.isArray(value)) {
+            value = JSON.stringify(value)
+        } else {
+            value = (value + '').trim();
+        }
+        switch (type) {
+            case 'set':
+                value = btoa(encodeURIComponent(value));
+                localStorage.setItem(key, value);
+                break;
+            case 'get':
+                value = localStorage.getItem(key);
+                if (value === null) {
+                    return null;
+                }
+                value = decodeURIComponent(atob(value));
+                return value.isJSON() ? JSON.parse(value) : value;
+            case 'del':
+                if (localStorage.hasOwnProperty(key)) {
+                    localStorage.removeItem(key);
+                }
+                break;
+        }
     };
     // 数据绑定
     window._ = new Proxy({}, {
@@ -121,7 +180,7 @@
             // HTML片段
             if (t_html.length > 0) {
                 $.each($('[x-html=' + prop + ']'), function (i, tag) {
-                    if ((typeof pvalue != 'string') || ('' === pvalue)) {
+                    if ((typeof pvalue !== 'string') || ('' === pvalue)) {
                         $(tag).html('');
                     }
                     if (!pvalue.hasSuffix('.html')) {
@@ -143,14 +202,17 @@
         },
     });
 })();
+//
 $(document).ready(function () {
-    // 文件上传地址
-    window.common = {upload_url: 'http://127.0.0.1:81/backend/qp/common/upload/sdfsd'};
-    // 认证用户数据
-    window.auth_info = {
-        token: '',
-        random_str: '',
+    window.common = {
+        upload_url : 'http://127.0.0.1:81/backend/qp/common/upload/sdfsd', // 上传地址
+        auth_info: cache('get', 'auth_info') // 认证用户信息
+    };
+    // 认证信息不存在，跳转到登录页
+    if (!common.auth_info){
+        location.href = '/login.html';
     }
+
     window.auth_info.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOiIxNTYyNjg4MzMwIiwicmFuZG9tX3N0ciI6ImM2Yjg3YmNmN2M5M2M5OTBlZjRiMDk2ZWEwYjc1OTg5IiwidXNlcl9pZCI6IjEifQ==.Fy66uiZDihLTEJvO+NibJ1T7gpgIYdtvgoMEcpmN5Hw=';
     window.auth_info.random_str = 'c6b87bcf7c93c990ef4b096ea0b75989';
     // 列表筛选日期
@@ -277,6 +339,17 @@ $(document).ready(function () {
                         });
                         otag.data('value', value);
                     },
+                    onFilesRemoved: function (files) {
+                        let otag = $(this.$[0]).parents('.form-group');
+                        let value = otag.data('value');
+                        value = $.isArray(value) ? value : [];
+                        $.each(files, function (k, v) {
+                            if (v.url && value[k] && value[k].url && (v.url === value[k].url)) {
+                                delete value[k];
+                            }
+                        });
+                        otag.data('value', value);
+                    }
                 });
             });
         }
@@ -301,14 +374,27 @@ $(document).ready(function () {
             });
         }
         // 单选/复选框
-        let checker = self.find('.checkbox-primary,.radio-primary')
+        let checker = self.find('.checkbox-primary,.radio-primary').parent();
         if (checker.length > 0) {
-            $.each(checker, function (i, tag) {
-                let [input, label] = [$(tag).find('input'), $(tag).find('label')];
-                if (input && label) {
-                    let uuidStr = 'k-' + uuid();
-                    input.attr('id', uuidStr);
-                    label.attr('for', uuidStr);
+            $.each(checker, function (i, ptag) {
+                let [cps, rps, nameStr] = [$(ptag).find('.checkbox-primary'), $(ptag).find('.radio-primary'), 'kn-' + uuid()];
+                if (cps.length > 0) {
+                    $.each(cps, function (i, tag) {
+                        let [input, label, idStr] = [$(tag).find('[type=checkbox]'), $(tag).find('label'), 'c-' + uuid()];
+                        if (input && label && idStr && nameStr) {
+                            input.attr({'id': idStr, 'name': nameStr});
+                            label.attr('for', idStr);
+                        }
+                    });
+                }
+                if (rps.length > 0) {
+                    $.each(rps, function (i, tag) {
+                        let [input, label, idStr] = [$(tag).find('[type=radio]'), $(tag).find('label'), 'c-' + uuid()];
+                        if (input && label && idStr && nameStr) {
+                            input.attr({'id': idStr, 'name': nameStr});
+                            label.attr('for', idStr);
+                        }
+                    });
                 }
             });
         }
@@ -354,7 +440,7 @@ $(document).ready(function () {
     }).on('click', '#body-modal .form-submit', function () {
         let form = $(this).parent().parent();
         let targetId = form.data('id');
-        if (('' !== targetId) && (!/^[1-9][0-9]*$/.test(targetId))) {
+        if (targetId && (!/^[1-9][0-9]*$/.test(targetId))) {
             new $.zui.Messager('操作配置异常！', {
                 icon: 'warning-sign',
                 placement: 'center',
@@ -429,10 +515,93 @@ $(document).ready(function () {
                 }
             });
             if (!isOK) {
+                new $.zui.Messager('表单字段数据校验失败！', {
+                    icon: 'warning-sign',
+                    placement: 'center',
+                    type: 'danger',
+                    close: true,
+                    actions: [{
+                        name: 'reset',
+                        icon: 'question-sign',
+                        text: '重置',
+                        action: function () {
+                            $.each(fields, function (i, tag) {
+                                let otag = $(tag);
+                                otag.removeClass('has-error').find('.help-block').remove();
+                                let [name, type, ovalue] = [otag.attr('f-name'), otag.attr('f-type'), otag.attr('f-ovalue')];
+                                ovalue = ovalue ? decodeURIComponent(window.atob(ovalue)) : '';
+                                name = (undefined !== name) && ('' !== name.trim()) ? name.trim() : '';
+                                if ('' !== name) {
+                                    switch (type) {
+                                        case 'input':
+                                            otag.find('input,textarea').val(ovalue);
+                                            break;
+                                        case 'range':
+                                            ovalue = $.isArray(ovalue) ? ovalue : [];
+                                            $.each(otag.find('input'), function (ii, iv) {
+                                                $(iv).val(ovalue[ii] ? ovalue[ii] : '');
+                                            });
+                                            break;
+                                        case 'file':
+                                            let upId = otag.find('.uploader').attr('id');
+                                            ovalue = $.isArray(ovalue) ? ovalue : [];
+                                            let up = form_data['uploader'][upId];
+                                            if (up) {
+                                                up = up.data('zui.uploader');
+                                                let files = up.getFiles();
+                                                $.each(files, function (ii, file) {
+                                                    up.removeFile(file);
+                                                });
+                                            }
+                                            break;
+                                        case 'switch':
+                                            otag.find('[type=checkbox]').prop("checked", ovalue);
+                                            break;
+                                        case 'radio':
+                                            otag.find('[type=radio]').prop("checked", false);
+                                            otag.find('[type=radio][value="' + ovalue + '"]').prop("checked", true);
+                                            break;
+                                        case 'checkbox':
+                                            otag.find('[type=checkbox]').prop("checked", false);
+                                            ovalue = $.isArray(ovalue) ? ovalue : [];
+                                            $.each(ovalue, function (ii, iv) {
+                                                otag.find('[type=checkbox][value="' + iv + '"]').prop("checked", true);
+                                            });
+                                            break;
+                                        case 'select':
+                                            otag = otag.find('.chosen-select');
+                                            let multiple = otag.attr('multiple');
+                                            if (multiple) {
+                                                ovalue = $.isArray(ovalue) ? ovalue : [];
+                                            }
+                                            otag.val(ovalue).trigger('chosen:updated');
+                                            break;
+                                        case 'editor':
+                                            let edId = otag.find('.form-editor').attr('id');
+                                            let ed = form_data['editor'][edId];
+                                            if (ed) {
+                                                ed.txt.html(ovalue);
+                                            }
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                    }]
+                }).show();
                 return;
             }
-            if (targetId)
-                form.data('data', result);
+            log(result);
+            form.addClass('load-indicator loading').data('loading', '正在提交。。。');
+            setTimeout(function () {
+                let fp = form.parent();
+                fp.fadeOut('slow', function () {
+                    fp.remove();
+                });
+            }, 2000);
+            if (targetId) {
+                form.data('data',);
+            }
         }
     });
 });

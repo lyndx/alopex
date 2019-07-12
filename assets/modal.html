@@ -13,7 +13,6 @@
                         <a data-toggle='collapse' data-parent='#cards' href='#card_1'>第一条记录</a>
                     </h4>
                 </div>
-                <!-- load-indicator loading' data-loading='正在处理...  -->
                 <div id='card_1' class='panel-collapse collapse in'>
                     <div class='panel-body'>
                         <div class='form-group' f-name='username' f-must='true' f-type='input' f-regex='^[a-z0-9\-_]{6,12}$ i'>
@@ -60,7 +59,7 @@
                         </div>
                         <div class='form-group' f-name='radio' f-must='true' f-type='radio'>
                             <label>单选</label>
-                            <div class='form-control'>
+                            <div class='form-control' f-ovalue='3'>
                                 <div class='radio-primary'><input type='radio' name='x' value='1'><label>选项一</label></div>
                                 <div class='radio-primary'><input type='radio' name='x' value='2'><label>选项二</label></div>
                                 <div class='radio-primary'><input type='radio' name='x' value='3'><label>选项三</label></div>
@@ -68,7 +67,7 @@
                         </div>
                         <div class='form-group' f-name='checkbox' f-must='true' f-type='checkbox'>
                             <label>多选</label>
-                            <div class='form-control'>
+                            <div class='form-control' f-ovalue='3'>
                                 <div class='checkbox-primary'><input type='checkbox' value='0'><label>未选中</label></div>
                                 <div class='checkbox-primary'><input type='checkbox' value='1'><label>选中</label></div>
                             </div>
@@ -88,7 +87,7 @@
                         <div class='form-group' f-name='editor' f-must='true' f-type='editor'>
                             <label>编辑器</label>
                             <div class='form-control'>
-                                <div id='editor' class='form-editor'></div>
+                                <div class='form-editor'></div>
                             </div>
                         </div>
                         <button type='button' class='btn btn-primary form-submit'>保存</button>
@@ -96,13 +95,17 @@
                 </div>
             </div>
             <div class='panel panel-default'>
-                <div class='panel-heading' id='headingTwo'>
+                <div class='panel-heading'>
                     <h4 class='panel-title'>
-                        <a class='collapsed' data-toggle='collapse' data-parent='#accordionPanels' href='#collapseTwo'>折叠面板</a>
+                        <a data-toggle='collapse' data-parent='#cards' href='#card_2'>第二条记录</a>
                     </h4>
                 </div>
-                <div id='collapseTwo' class='panel-collapse collapse'>
-                    <div class='panel-body'></div>
+                <div id='card_2' class='panel-collapse collapse'>
+                    <div class='panel-body'>
+                        If there is one thing one can aways earn for, is humbins love.
+                        <hr/>
+                        Yes, you are right.
+                    </div>
                 </div>
             </div>
         </div>
